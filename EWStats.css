@@ -1,25 +1,9 @@
-#EWStatsAuthPanel,#EWStatsFloatingControls {
+#EWStatsFloatingControls {
     position: absolute;
     background-color: rgba(27,27,27,.91);
     font-weight: 400;
     top: 10px;
     z-index: 1600
-}
-
-#EWStatsAuthPanel {
-    left: 50%;
-    width: 40%;
-    margin-left: -20%;
-    padding: 8px;
-    border: 1px solid #0cf;
-    border-radius: 2px;
-    color: #fff
-}
-
-#EWStatsAuthPanel img {
-    max-width: 50%!important;
-    height: auto;
-    display: inline-block
 }
 
 #EWStatsFloatingControls {
@@ -166,7 +150,8 @@ div#sl-action-table,div#sl-main-table {
     border: 1px solid #0cf;
     border-radius: 6px;
     z-index: 1100;
-    font-size: 10pt
+    font-size: 10pt;
+    color: #eee;
 }
 
 #ewsPanel a.ews-close-window {
@@ -392,4 +377,14 @@ div#sl-action-table,div#sl-main-table {
     font-size: 12px;
     position: relative;
     float: right
+}
+
+
+.ews-dialog .ui-dialog-title {
+    font-size: 1.5em;
+    -webkit-margin-before: 0.83em;
+    -webkit-margin-after: 0.83em;
+    -webkit-margin-start: 0px;
+    -webkit-margin-end: 0px;
+    font-weight: bold;
 }
