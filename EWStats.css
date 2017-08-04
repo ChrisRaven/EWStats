@@ -58,3 +58,7 @@
     height: 16px;           /* make this the size of your image */
     vertical-align: middle; /* align the text vertically centered */
 }
+
+.ui-dialog-titlebar-close:focus {
+    outline: none;
+}
