@@ -7,14 +7,14 @@
     color: #eee;
 }
 
-#ewsPanel a.ews-close-window {
+.ews-dialog a.ews-close-window {
     position: absolute;
     top: 10px;
     right: 15px;
     z-index: 100
 }
 
-#ewsPanel .ewsPanelHeader {
+.ews-dialog .ewsPanelHeader {
     position: absolute;
     left: 0;
     right: 0;
@@ -24,7 +24,7 @@
     overflow: hidden
 }
 
-#ewsPanel .ewsPanelContent {
+.ews-dialog .ewsPanelContent {
     position: absolute;
     left: 0;
     right: 0;
@@ -34,12 +34,12 @@
     border-top: 1px solid #333
 }
 
-#ewsPanel button {
+.ews-dialog button {
     font-size: 12pt;
     padding: 2px 6px
 }
 
-#ewsPanel .ews-table {
+.ews-dialog .ews-table {
     background: 0 0
 }
 
