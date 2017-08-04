@@ -60,5 +60,5 @@
 }
 
 .ui-dialog-titlebar-close:focus {
-    outline: none;
+    outline: none !important;
 }
