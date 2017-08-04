@@ -1,3 +1,13 @@
+#ewsPanel {
+    display: none;
+    z-index: 2000;
+    background-color: #232323;
+}
+
+#worldMap {
+  height: 400px;
+}
+
 .ews-dialog {
     background: rgba(27,27,27,1);
     border: 1px solid #0cf;
