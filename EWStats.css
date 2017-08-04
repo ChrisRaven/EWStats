@@ -48,7 +48,7 @@
     font-weight: bold;
 }
 
-.dialog-close {
+.ui-dialog-titlebar-close {
     background-image: url(close.png); /* 16px x 16px */
     background-color: transparent; /* make the button transparent */
     background-repeat: no-repeat;  /* make the background image appear only once */
