@@ -8,11 +8,6 @@
   height: 400px;
 }
 
-#ewsChart {
-    height: 300px;
-    width: 400px;
-}
-
 .ews-dialog {
     background: rgba(27,27,27,1);
     border: 1px solid #0cf;
