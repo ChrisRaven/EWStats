@@ -23,6 +23,13 @@
   margin-left: auto;
 }
 
+#chartCenterLabel {
+  bottom: 100px;
+  text-align: center;
+  margin-left: auto;
+  width: 320px;
+}
+
 .ews-dialog {
     background: rgba(27,27,27,1);
     border: 1px solid #0cf;
