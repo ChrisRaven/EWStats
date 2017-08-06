@@ -24,7 +24,7 @@
 }
 
 #chartCenterLabel {
-  bottom: 145px;
+  bottom: 150px;
   text-align: center;
   margin-left: auto;
   width: 320px;
@@ -32,7 +32,7 @@
 }
 
 #chartCenterLabel span {
-    font-size: 1.7em;
+    font-size: 2em;
 }
 
 .ews-dialog {
