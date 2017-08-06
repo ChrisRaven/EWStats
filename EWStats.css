@@ -8,8 +8,13 @@
   height: 400px;
 }
 
+#chartWrapper {
+  width: 100%;
+}
+
 #ewsChart {
   height: 230px;
+  margin-left: auto;
 }
 
 .ews-dialog {
