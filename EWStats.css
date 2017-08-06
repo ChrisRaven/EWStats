@@ -24,11 +24,15 @@
 }
 
 #chartCenterLabel {
-  bottom: 100px;
+  bottom: 145px;
   text-align: center;
   margin-left: auto;
   width: 320px;
   position: relative;
+}
+
+#chartCenterLabel span {
+    font-size: 1.7em;
 }
 
 .ews-dialog {
