@@ -15,6 +15,7 @@
 #ewsChart {
   height: 230px;
   margin-left: auto;
+  margin-right: 0px;
 }
 
 .ews-dialog {
