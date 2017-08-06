@@ -9,13 +9,13 @@
 }
 
 #chartWrapper {
-  width: 100%;
+ /* width: 100%;*/
 }
 
 #ewsChart {
   height: 230px;
-  margin-left: auto;
-  margin-right: 0px;
+  /*margin-left: auto;
+  margin-right: 0px;*/
 }
 
 .ews-dialog {
