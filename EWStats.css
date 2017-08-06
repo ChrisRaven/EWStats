@@ -8,6 +8,10 @@
   height: 400px;
 }
 
+.jvectormap-tip {
+  z-index: 2005;
+}
+
 #chartWrapper {
   width: 100%;
 }
