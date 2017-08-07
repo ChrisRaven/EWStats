@@ -133,6 +133,14 @@
     transition: background-color .1s ease-in-out,border-color .1s ease-in-out,color .1s ease-in-out;
 }
 
+.minimalButton:hover {
+    background-color:hsla(0,0%,100%,.11);
+}
+
+.minimalButton:active {
+    background-color:hsla(0,0%,100%,.07);
+}
+
 .minimalButton2.selected {
     background-color: rgba(54,121,165,.8);
 }
