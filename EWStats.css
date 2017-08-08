@@ -156,14 +156,14 @@
 
 #ewsChartLegend ul {
     list-style-type: none;
-    margin-left: 0;
-    margin-right: auto;
 }
 
 #ewsChartLegend li {
+    text-align: left;
 }
 
 #ewsChartLegend div {
     display: inline-block;
     width: 40px;
+    margin-right: 10px;
 }
