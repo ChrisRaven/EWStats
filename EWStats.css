@@ -153,3 +153,15 @@
 .ewsNavButton.selected {
     background-color: rgba(54,121,165,.8);
 }
+
+#ewsChartLegend ul {
+    list-style-type: none;
+}
+
+#ewsChartLegend li {
+}
+
+#ewsChartLegend div {
+    display: inline-block;
+    width: 40px;
+}
