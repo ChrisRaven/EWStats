@@ -156,6 +156,8 @@
 
 #ewsChartLegend ul {
     list-style-type: none;
+    margin-left: 0;
+    margin-right: auto;
 }
 
 #ewsChartLegend li {
