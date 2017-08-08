@@ -4,7 +4,7 @@
     background-color: #232323;
 }
 
-#worldMap {
+#ewsWorldMap {
   height: 400px;
 }
 
@@ -12,18 +12,18 @@
   z-index: 2005;
 }
 
-#chartWrapper {
+#ewsChartWrapper {
   width: 100%;
 }
 
-#chartFixedWrapper {
+#ewChartFixedWrapper {
   height: 230px;
   width: 460px;
   text-align: right;
   margin-left: auto;
 }
 
-#chartCenterLabel {
+#ewChartCenterLabel {
   bottom: 150px;
   text-align: center;
   margin-left: auto;
@@ -31,7 +31,7 @@
   position: relative;
 }
 
-#chartCenterLabel span {
+#ewsChartCenterLabel span {
     font-size: 2em;
 }
 
