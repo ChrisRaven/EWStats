@@ -27,8 +27,9 @@
   bottom: 150px;
   text-align: center;
   margin-left: auto;
-  width: 310px;
+  width: 120px;
   position: relative;
+  margin-right: 95px;
 }
 
 #ewsChartCenterLabel span {
