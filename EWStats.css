@@ -165,5 +165,7 @@
 #ewsChartLegend div {
     display: inline-block;
     width: 40px;
-    margin-right: 10px;
+    margin-right: 7px;
+    margin-bottom: 10px;
+    height: 13px;
 }
