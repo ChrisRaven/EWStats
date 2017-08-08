@@ -162,6 +162,9 @@
 
 #ewsChartLegend ul {
     list-style-type: none;
+    color: #656565;
+    font-size: 12px;
+    font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
 }
 
 #ewsChartLegend li {
@@ -174,7 +177,4 @@
     margin-right: 7px;
     margin-bottom: 10px;
     height: 12px;
-    color: #656565;
-    font-size: 12px;
-    font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
 }
