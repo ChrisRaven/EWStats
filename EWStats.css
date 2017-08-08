@@ -16,14 +16,14 @@
   width: 100%;
 }
 
-#ewChartFixedWrapper {
+#ewsChartFixedWrapper {
   height: 230px;
   width: 460px;
   text-align: right;
   margin-left: auto;
 }
 
-#ewChartCenterLabel {
+#ewsChartCenterLabel {
   bottom: 150px;
   text-align: center;
   margin-left: auto;
