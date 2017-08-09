@@ -226,5 +226,10 @@
 }
 
 #ewsRanking {
+    text-align: middle;
     vertical-align: middle;
+}
+
+#ewsRanking span {
+    font-size: 2em;
 }
