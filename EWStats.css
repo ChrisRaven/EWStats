@@ -185,3 +185,7 @@
     margin-bottom: 10px;
     height: 12px;
 }
+
+.ewsRankingRowNormal > td:nth-child(3) {
+    width: 120px;
+}
