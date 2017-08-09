@@ -189,3 +189,7 @@
 .ewsRankingRowNormal > td:nth-child(3) {
     width: 130px;
 }
+
+.jvectormap-label {
+    opacity: 0.7;
+}
