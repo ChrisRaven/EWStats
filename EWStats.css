@@ -219,3 +219,8 @@
 .jvectormap-tip tr:nth-child(odd) {
     background-color: #333;
 }
+
+.ews-world-map-tooltip-empty-row {
+    color: gray;
+    font-style: italic;
+}
