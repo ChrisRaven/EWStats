@@ -210,6 +210,6 @@
     text-align: right;
 }
 
-.jvectormap-tip tr:nth-child(even) {
-    background-color: #222;
+.jvectormap-tip tr:nth-child(odd) {
+    background-color: #333;
 }
