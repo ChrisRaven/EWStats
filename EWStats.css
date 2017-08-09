@@ -235,3 +235,7 @@
 #ewsAvg span {
     font-size: 1.6em;
 }
+
+.ewsCountryNameWrapper {
+    width: 130px;
+}
