@@ -193,3 +193,11 @@
 .jvectormap-tip {
     background-color: rgba(0, 0, 0, 0.9);
 }
+
+.jvectormap-tip img {
+    margin-right: 3px;
+}
+
+.jvectormap-tip td:n-th-child(0) {
+    width: 80px;
+}
