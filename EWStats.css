@@ -226,8 +226,9 @@
 }
 
 #ewsAvg {
-    text-align: middle;
+    text-align: center;
     vertical-align: middle;
+    padding: 40px;
 }
 
 #ewsAvg span {
