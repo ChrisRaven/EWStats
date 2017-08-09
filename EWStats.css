@@ -200,6 +200,8 @@
 
 .jvectormap-tip table {
     display: inline-block;
+    vertical-align: top;
+    margin-right: 5px;
 }
 
 .jvectormap-tip img {
