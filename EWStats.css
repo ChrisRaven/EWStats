@@ -229,7 +229,7 @@
 #ewsAvg {
     text-align: center;
     vertical-align: middle;
-    padding: 40px;
+    padding: 35px;
 }
 
 #ewsAvg span {
@@ -237,5 +237,8 @@
 }
 
 .ewsCountryNameWrapper {
-    width: 130px;
+    width: 115px;
+    max-width: 115px;
+    overflow: hidden;
+    white-space: nowrap;
 }
