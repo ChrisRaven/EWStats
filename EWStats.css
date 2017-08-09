@@ -224,3 +224,7 @@
     color: gray;
     font-style: italic;
 }
+
+#ewsLeftCell table {
+    display: inline-block;
+}
