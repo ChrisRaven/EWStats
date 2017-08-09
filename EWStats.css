@@ -188,6 +188,7 @@
 
 .ewsRankingRowNormal > td:nth-child(3) {
     width: 130px;
+    white-space: nowrap;
 }
 
 .ewsRankingRowNormal > td:nth-child(4) {
