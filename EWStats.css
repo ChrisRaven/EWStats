@@ -225,11 +225,11 @@
     font-style: italic;
 }
 
-#ewsRanking {
+#ewsAvg {
     text-align: middle;
     vertical-align: middle;
 }
 
-#ewsRanking span {
+#ewsAvg span {
     font-size: 2em;
 }
