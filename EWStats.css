@@ -242,3 +242,8 @@
     overflow: hidden;
     white-space: nowrap;
 }
+
+#ewsLoader {
+    display: inline-block;
+    margin-left: 10px;
+}
