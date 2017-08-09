@@ -101,7 +101,7 @@
     outline: none !important;
 }
 
-ui-widget-overlay {
+.ui-widget-overlay {
     background-color: black;
     opacity: 0.3
 }
