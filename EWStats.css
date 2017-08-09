@@ -209,3 +209,7 @@
 .jvectormap-tip td:nth-child(2) {
     text-align: right;
 }
+
+.jvectormap-tip tr:nth-child(even) {
+    background-color: 222;
+}
