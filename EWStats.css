@@ -198,6 +198,6 @@
     margin-right: 3px;
 }
 
-.jvectormap-tip td:n-th-child(0) {
-    width: 140px;
+.jvectormap-tip td:nth-child(0) {
+    width: 150px;
 }
