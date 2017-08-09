@@ -40,7 +40,7 @@
     background: rgba(27,27,27,1);
     border: 1px solid #0cf;
     border-radius: 6px;
-    z-index: 1100;
+    z-index: 1700;
     font-size: 10pt;
     color: #eee;
 }
@@ -99,6 +99,11 @@
 
 .ui-dialog-titlebar-close:focus {
     outline: none !important;
+}
+
+ui-widget-overlay {
+    background-color: black;
+    opacity: 0.3
 }
 
 .ewsNavButtonGroup {
