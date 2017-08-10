@@ -506,6 +506,9 @@
 $(document)
   .ajaxStart(function () {
     $('#ewsLoader').addClass('onscreen');
+    setTimeout(function () {
+      $('#ewsLoader').removeClass('onscreen'); // to remove animation, if it didn't stop automatically
+    }, 10000);
   })
   .ajaxStop(function () {
   setTimeout(function () {
