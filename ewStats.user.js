@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      0.1.1
+// @version      0.1.2
 // @description  Shows daily, weekly and monthly statistics for EyeWire
 // @author       Krzysztof Kruk
 // @match        https://eyewire.org/
@@ -236,6 +236,7 @@
     // source: https://github.com/bjornd/jvectormap/issues/221#issuecomment-63071490
     map.params.series.regions[0].min = min;
     map.params.series.regions[0].max = max;
+    map.series.regions[0].clear(); // if not cleared, the values, which aren't in the current set, remain from the previous set
     map.series.regions[0].setValues(values);
   }
 
