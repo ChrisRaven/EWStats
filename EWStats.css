@@ -251,8 +251,8 @@
 /* ACCURACY CHART */
 
 #accuracyCHart {
-    width: 150px;
+    width: 250px;
     height: 100%;
-    background-color: blue;
+    background-color: rgba(110, 110, 110, 0.08;
     float: right;
 }
