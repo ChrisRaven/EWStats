@@ -279,11 +279,7 @@
     text-align: center;
 }
 
-#accuracy-weight-stripe {
-    border-collapse: collapse;
-}
-
-#accuracy-weight-stripe td {
+.accuracy-weight-stripe-cell {
     background-color: red;
     height: 10px;
     width: 10px;
@@ -293,7 +289,6 @@
     position: relative;
     top: -96px;
     left: 220px;
-    border-collapse: collapse;
     height: 45px;
 }
 
