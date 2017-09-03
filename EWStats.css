@@ -256,3 +256,11 @@
     background-color: rgba(110, 110, 110, 0.08);
     float: right;
 }
+
+.accuracy-bar {
+    background-color: green;
+    border:1px solid gray;
+    width: 15px;
+    height: 100%;
+    display: inline-block;
+}
