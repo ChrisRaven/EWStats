@@ -247,3 +247,10 @@
     display: inline-block;
     margin-left: 10px;
 }
+
+/* ACCURACY CHART */
+
+#accuracyCHart {
+    width:150px;
+    background-color: blue;
+}
