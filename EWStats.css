@@ -259,8 +259,8 @@
 
 .accuracy-bar {
     background-color: green;
-    border:1px solid gray;
     width: 15px;
     height: 100%;
     display: inline-block;
+    margin-right: 1px;
 }
