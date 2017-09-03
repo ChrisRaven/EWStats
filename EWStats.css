@@ -251,6 +251,7 @@
 /* ACCURACY CHART */
 
 #accuracyCHart {
-    width:150px;
+    width: 150px;
+    height: 100%;
     background-color: blue;
 }
