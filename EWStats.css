@@ -250,11 +250,12 @@
 
 /* ACCURACY CHART */
 
-#accuracyChart {
+#accuracy-chart {
     width: 250px;
     height: 100%;
     background-color: rgba(110, 110, 110, 0.08);
     float: right;
+    overflow: hidden;
 }
 
 .accuracy-bar {
