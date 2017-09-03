@@ -270,11 +270,13 @@
     top: -50px;
     left: 170px;
     width: 50px;
+    height: 45px;
 }
 
 #accuracy-value {
     font-size: 16pt;
     color: #e4e1e1;
+    text-align: center;
 }
 
 #accuracy-weight-stripe {
@@ -289,8 +291,10 @@
 
 #miscoloring-block {
     position: relative;
-    top: -50px;
+    top: -105px;
     left: 220px;
+    border-collapse: collapse;
+    height: 45px;
 }
 
 #miscoloring-overcolor {
