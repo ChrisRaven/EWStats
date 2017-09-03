@@ -269,15 +269,22 @@
     position: relative;
     top: -50px;
     left: 170px;
+    width: 50px;
 }
 
 #accuracy-value {
-    font-size: 14pt;
+    font-size: 16pt;
     color: #e4e1e1;
+}
+
+#accuracy-weight-stripe {
+    border-collapse: collapse;
 }
 
 #accuracy-weight-stripe td {
     background-color: red;
+    height: 10px;
+    width: 10px;
 }
 
 #miscoloring-block {
@@ -293,3 +300,4 @@
 #miscoloring-undercolor {
     background-color: orange;
 }
+
