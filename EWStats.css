@@ -284,6 +284,7 @@
 #accuracy-value {
     font-size: 10pt;
     color: #e4e1e1;
+    padding-top: 7px;
 }
 
 .accuracy-weight-stripe-cell {
