@@ -300,6 +300,7 @@
     top: -95px;
     left: 220px;
     height: 45px;
+    border-collapse: collapse;
 }
 
 #miscoloring-block tr {
@@ -310,9 +311,13 @@
     vertical-align: bottom;
 }
 
+#miscoloring-block td:nth-child(2) {
+    vertical-align: top;
+}
+
 #miscoloring-overcolor, #miscoloring-undercolor {
     min-height: 1px;
-    height: 23px;
+    height: 15px;
     width: 6px;
 }
 
