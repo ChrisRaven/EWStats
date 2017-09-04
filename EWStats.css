@@ -307,11 +307,11 @@
     height: 50%;
 }
 
-#miscoloring-block td:nth-child(1) {
+#miscoloring-block tr:nth-child(1) td {
     vertical-align: bottom;
 }
 
-#miscoloring-block td:nth-child(2) {
+#miscoloring-block tr:nth-child(2) td {
     vertical-align: top;
 }
 
