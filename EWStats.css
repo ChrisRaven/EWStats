@@ -302,8 +302,16 @@
     height: 45px;
 }
 
+#miscoloring-block tr {
+    height: 50%;
+}
+
+#miscoloring-block td:nth-child(1) {
+    vertical-align: bottom;
+}
+
 #miscoloring-overcolor, #miscoloring-undercolor {
-    min-height: 23px;
+    min-height: 1px;
     height: 23px;
     width: 6px;
 }
