@@ -293,6 +293,7 @@
     width: 10px;
     min-height: 10px;
     display: inline-block;
+    margin-right: 1px;
 }
 
 #miscoloring-block {
