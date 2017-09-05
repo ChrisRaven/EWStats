@@ -258,6 +258,10 @@
     overflow: hidden;
 }
 
+#accuracy-bars-wrapper {
+    display: inline;
+}
+
 .accuracy-bar {
     background-color: green;
     width: 15px;
