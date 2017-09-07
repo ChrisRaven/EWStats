@@ -253,7 +253,6 @@
 #accuracy-chart {
     width: 230px;
     height: 100%;
-    background-color: rgba(110, 110, 110, 0.08);
     float: right;
     overflow: hidden;
 }
