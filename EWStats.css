@@ -263,7 +263,12 @@
 }
 
 .accuracy-bar-cover {
-    position: relative;
+    position: absolute;
+    width: 15px;
+    margin-right: 1px;
+    display: inline-block;
+    height: 100%;
+    background-color: pink;
 }
 
 .accuracy-bar {
