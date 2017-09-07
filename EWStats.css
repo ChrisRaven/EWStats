@@ -262,6 +262,10 @@
     display: inline;
 }
 
+.accuracy-bar-cover {
+    position: relative;
+}
+
 .accuracy-bar {
     background-color: green;
     width: 15px;
