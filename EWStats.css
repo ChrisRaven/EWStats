@@ -316,10 +316,12 @@
 }
 
 #accu-floating-label {
+    color: white;
+    font-size: 10pt;
     position: relative;
     display: none;
-    width: 100px;
-    height: 100px;
+    width: 210px;
+    height: 140px;
     top: 25px;
     background-color: #1B1B1B;
     border: 1px solid #555;
