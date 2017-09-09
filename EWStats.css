@@ -327,3 +327,7 @@
     border: 1px solid #555;
     z-index: 10;
 }
+
+#accu-floating-label td:nth-child(1) {
+    color: gray;
+}
