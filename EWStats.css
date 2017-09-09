@@ -272,6 +272,11 @@
     z-index: 1;
 }
 
+.accuracy-bar-cover:hover {
+    background-color: white;
+    opacity: 0.2;
+}
+
 .accuracy-bar {
     background-color: green;
     width: 15px;
