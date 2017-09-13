@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      0.1.2
+// @version      0.2
 // @description  Shows daily, weekly and monthly statistics for EyeWire
 // @author       Krzysztof Kruk
 // @match        https://eyewire.org/
@@ -25,6 +25,17 @@
 (function() {
   'use strict';
 
+  // STATS PANEL
+  const
+    TB_COLOR = 'lightgray',
+    RP_COLOR = '#0066FF',
+    SC_COLOR = 'pink',
+    WT_0_COLOR = 'brown',
+    WT_1_COLOR = 'red',
+    WT_2_COLOR = 'orange',
+    WT_3_COLOR = 'yellow',
+    WT_4_COLOR = 'green';
+
   var
     DEBUG = false,
 
@@ -32,7 +43,8 @@
     map, chart,
     dataType = 'points',
     timeRange = 'day',
-    dataCurrentlyInUse;
+    dataCurrentlyInUse,
+    accuData = new Array(10);
 
   var countries = JSON.parse(GM_getResourceText('countries'));
 
@@ -188,9 +200,9 @@
         for (let row of dataCurrentlyInUse) {
           if (row.country === lCode) {
             htmlRows += '<tr><td>' + row.username + '</td><td>' + (dataType !== 'people' ? row.points : '&nbsp;') + '</td></tr>';
-            if ((++rowCounter % 30) === 0) {
+            if (++rowCounter % 30 === 0) {
               htmlRows += '</table><table>';
-              }
+            }
           }
         }
 
@@ -474,6 +486,239 @@
 
     $('#ewsAvg').html(html);
   }
+  // end: STATS PANEL
+
+  // ACCURACY CHART
+  function hex(x) {
+    x = x.toString(16);
+    return (x.length == 1) ? '0' + x : x;
+  }
+
+  function getIntermediateColor(percent, start, middle, end) {
+    var r, g, b, multiplier;
+
+    if (typeof start === 'undefined') {
+      start = [0, 255, 0]; // green
+    }
+    if (typeof middle === 'undefined') {
+      middle = [255, 255, 0]; // yellow
+    }
+    if (typeof end === 'undefined') {
+      end = [255, 0, 0]; // red
+    }
+
+    if (percent > 0.5) {
+      multiplier = (percent - 0.5) * 2;
+      r = Math.ceil(start[0] * multiplier + middle[0] * (1 - multiplier));
+      g = Math.ceil(start[1] * multiplier + middle[1] * (1 - multiplier));
+      b = Math.ceil(start[2] * multiplier + middle[2] * (1 - multiplier));
+    }
+    else {
+      multiplier = percent * 2;
+      r = Math.ceil(middle[0] * multiplier + end[0] * (1 - multiplier));
+      g = Math.ceil(middle[1] * multiplier + end[1] * (1 - multiplier));
+      b = Math.ceil(middle[2] * multiplier + end[2] * (1 - multiplier));
+    }
+
+    return '#' + hex(r) + hex(g) + hex(b);
+  }
+
+  function aRow(ordinal, color, height, data) {
+    return '<div class="accuracy-bar" id="accuracy-bar-' + ordinal + '" style="background-color: ' + color + '; height: ' + height + '%;" data-accuracy=\''+ JSON.stringify(data) /*html*/ + '\'></div>';
+  }
+
+  function accuColor(val) {
+    if (typeof val === 'string') {
+      switch (val) {
+        case 'TB': return TB_COLOR;
+        case 'SG': return SC_COLOR;
+        case 'RP': return RP_COLOR;
+      }
+    }
+    if (typeof val === 'number') {
+      return getIntermediateColor(val / 100);
+    }
+    return 'transparent';
+  }
+
+  function generateAccuracyChartHTMLRow(ordinal, val, data) {
+    var color = accuColor(val);
+
+    if (typeof val === 'string') {
+      return aRow(ordinal, color, 100, data);
+    }
+    if (typeof val === 'number') {
+      val /= 100;
+      return aRow(ordinal, color, val * 100, data);
+    }
+    return aRow(ordinal, color, 0, data);
+  }
+
+  function updateAccuracyValue(val) {
+    document.getElementById('accuracy-value').innerHTML = val + (typeof val === 'string' ? '' : '%');
+  }
+
+  function weightToColor(wt) {
+    var
+      color;
+
+    switch (wt) {
+        case 0: color = WT_0_COLOR; break;
+        case 1: color = WT_1_COLOR; break;
+        case 2: color = WT_2_COLOR; break;
+        case 3: color = WT_3_COLOR; break;
+        case 4: color = WT_4_COLOR; break;
+        default: color = WT_4_COLOR;
+    }
+
+    return color;
+  }
+
+  function updateAccuracyWeight(wt) {
+    var
+      i, color,
+      cells = document.getElementsByClassName('accuracy-weight-stripe-cell');
+
+    wt = Math.floor(wt);
+    color = weightToColor(wt--);
+
+    for (i = 0; i <= wt && i < 4; i++) {
+      cells[i].style.backgroundColor = color;
+    }
+
+    if (i < 4) {
+      for (;i < 4; i++) {
+        cells[i].style.backgroundColor = 'transparent';
+      }
+    }
+  }
+
+  function generateAccuracyWidgetHTML() {
+    var
+      i, len, html = '<div id="accuracy-bars-wrapper">',
+      values = localStorage.getItem('ewsAccuData');
+
+    html += generateAccuracyChartHTMLRow(11);
+    if (values) {
+      values = JSON.parse(values);
+      accuData = values;
+      for (i = 0, len = values.length; i < len; i++) {
+        html += '<div class="accuracy-bar-cover"></div>';
+        html += generateAccuracyChartHTMLRow(i, values[i] ? values[i].val : undefined, values[i] ? {
+          val: values[i].val,
+          wt: values[i].wt,
+          lvl: values[i].lvl,
+          score: values[i].score,
+          cellId: values[i].cellId,
+          cubeId: values[i].cubeId,
+          timestamp: values[i].timestamp
+        } : {});
+      }
+    }
+    else {
+      for (i = 0; i < 10; i++) {
+        html += '<div class="accuracy-bar-cover"></div>';
+        html += generateAccuracyChartHTMLRow(i, undefined, {});
+      }
+    }
+
+    html += '</div>';
+
+    html += '<div id="accuracy-bar-atlas"></div>';
+    html += '<div id="accuracy-block">';
+    html += '<div id="accuracy-value">no data</div>';
+    html += '<div id="accuracy-weight-stripe">';
+    html += '<div class="accuracy-weight-stripe-cell"></div>';
+    html += '<div class="accuracy-weight-stripe-cell"></div>';
+    html += '<div class="accuracy-weight-stripe-cell"></div>';
+    html += '<div class="accuracy-weight-stripe-cell"></div>';
+    html += '</div>';
+    html += '</div>';
+
+    $('#acc').after('<div id="accuracy-chart">' + html + '</div>');
+
+    i--;
+    if (values && typeof values[i] !== 'undefined') {
+      updateAccuracyValue(values[i].val);
+      updateAccuracyWeight(values[i].wt);
+    }
+
+    $('body').append('<div id="accu-floating-label"></div>');
+  }
+
+  function updateAccuracyBar(index, accu, data) {
+    var el = document.getElementById('accuracy-bar-' + index);
+
+    if (el) {
+      el.style.height = (typeof accu === 'number' ? accu : '100') + '%';
+      el.style.backgroundColor = accuColor(accu);
+      el.dataset.accuracy = JSON.stringify(data);
+    }
+  }
+
+  function updateAccuracyBars() {
+    var
+      i, el;
+
+    for (i = 0; i < accuData.length; i++) {
+      updateAccuracyBar(i, !accuData[i] ? undefined : accuData[i].val, accuData[i] ? {
+        val: accuData[i].val,
+        wt: accuData[i].wt,
+        lvl: accuData[i].lvl,
+        score: accuData[i].score,
+        cellId: accuData[i].cellId,
+        cubeId: accuData[i].cubeId,
+        timestamp: accuData[i].timestamp
+      } : {});
+    }
+  }
+
+  function addAccuracyBar(val, wt, lvl, score, cellId, cubeId, timestamp) {
+    accuData.push({val: val, wt: wt, lvl: lvl, score: score, cellId: cellId, cubeId: cubeId, timestamp: timestamp});
+    accuData.shift();
+    localStorage.setItem('ewsAccuData', JSON.stringify(accuData));
+    updateAccuracyBars();
+  }
+
+  $(document).on('cube-submission-data', function (event, data) {
+    var int = setInterval(function () {
+      if (!data || data.status !== 'finished') {
+        return;
+      }
+
+      var
+        accuracy = Math.floor(data.accuracy * 10000) / 100,
+        cubeId = tomni.task.id,
+        url = '/1.0/task/' + cubeId,
+        val,
+        cellId = tomni.cell,
+        timestamp = new Date().toLocaleString('en-US');
+
+      if (data.special === 'scythed') {
+        val = 'RP';
+      }
+      else if (data.trailblazer) {
+        val = 'TB';
+      }
+      else {
+        val = accuracy;
+      }
+
+      clearInterval(int);
+
+      $.getJSON(url, function (JSONdata) {
+        var weight = JSONdata.prior.weight + 1; // weight is updated on the server only after about a minute or so
+
+        if (data.special === 'scythed') {
+          weight += 2;
+        }
+        updateAccuracyWeight(weight);
+        addAccuracyBar(val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
+      });
+      updateAccuracyValue(val);
+      }, 100);
+  });
+  // end: ACCURACY CHART
 
 
   function init() {
@@ -483,9 +728,73 @@
     panel = document.getElementById('ewsPanel');
     createMap();
     createChart('points');
+
+    generateAccuracyWidgetHTML();
   }
 
   init();
+
+  $("#accuracy-bars-wrapper")
+    .on('mouseenter', '.accuracy-bar-cover', function(event) {
+      var
+        html, action, value,
+        lbl = document.getElementById('accu-floating-label'),
+        data = JSON.parse(this.nextSibling.dataset.accuracy);
+
+      if (!data || typeof data.val === 'undefined') {
+        return;
+      }
+
+     lbl.style.display = 'block';
+      lbl.style.left = getComputedStyle(this).left;
+
+      if (typeof data.val === 'string') {
+        if (data.val === 'TB') {
+          action = 'trailblazed';
+          value = '--';
+        }
+        else if (data.val === 'RP') {
+          action = 'reaped';
+          value = '--';
+        }
+      }
+      else if (typeof data.val === 'number') {
+        action = 'played';
+        value = data.val + '%';
+      }
+
+      html = '<table>';
+      html += '<tr><td>Action</td><td>' + action + '</td></tr>';
+      html += '<tr><td>Accuracy</td><td>' + value + '</td></tr>';
+      html += '<tr><td>Weight</td><td>' + data.wt + '</td></tr>';
+      html += '<tr><td>Score</td><td>' + data.score + '</td></tr>';
+      html += '<tr><td>Cell ID</td><td>' + data.cellId + '</td></tr>';
+      html += '<tr><td>Cube ID</td><td>' + data.cubeId + '</td></tr>';
+      html += '<tr><td>Timestamp</td><td>' + data.timestamp + '</td></tr>';
+      html += '</table>';
+      lbl.innerHTML = html;
+  })
+  .on('mouseleave', '.accuracy-bar-cover', function(event) {
+    document.getElementById('accu-floating-label').style.display = 'none';
+  })
+  .on('click', '.accuracy-bar-cover', function (event) {
+    var data = JSON.parse(this.nextSibling.dataset.accuracy);
+
+    if (!data || typeof data.cubeId === 'undefined') {
+      return false;
+    }
+
+    tomni.jumpToTaskID(data.cubeId);
+  })
+  .on('contextmenu', '.accuracy-bar-cover', function (event) {
+    var data = JSON.parse(this.nextSibling.dataset.accuracy);
+
+    if (!data || typeof data.cubeId === 'undefined') {
+      return false;
+    }
+
+    window.open(window.location.origin + "?tcJumpTaskId=" + data.cubeId);
+  });
 
   $('#ewsLink').click(function () {
     $(panel).dialog('open');
