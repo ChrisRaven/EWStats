@@ -306,13 +306,30 @@
     padding-top: 7px;
 }
 
-.accuracy-weight-stripe-cell {
+.accuracy-weight-stripe-cell,
+..accu-wt-lbl-cell {
     background-color: red;
     height: 10px;
     width: 10px;
     min-height: 10px;
     display: inline-block;
     margin-right: 1px;
+}
+
+.accu-wt-1 {
+    background-color: red;
+}
+
+.accu-wt-2 {
+    background-color: orange;
+}
+
+.accu-wt-3 {
+    background-color: yellow;
+}
+
+.accu-wt-4 {
+    background-color: green;
 }
 
 #accu-floating-label {
