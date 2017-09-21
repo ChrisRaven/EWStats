@@ -257,6 +257,13 @@
     overflow: hidden;
 }
 
+#accuracy-chart-updated {
+    width: 300px;
+    height: 100%;
+    float: right;
+    overflow: hidden;
+}
+
 #accuracy-bars-wrapper {
     display: inline;
 }
@@ -296,6 +303,14 @@
     position: relative;
     top: -50px;
     left: 185px;
+    width: 50px;
+    height: 45px;
+}
+
+#accuracy-block-updated {
+    position: relative;
+    top: -50px;
+    left: 235px;
     width: 50px;
     height: 45px;
 }
@@ -359,7 +374,7 @@
 #accu-more {
     color: #6688CC;
     display: inline-block;
-    position: absolute;
-    top: 20px;
+    position: relative;
+    top: -10px;
     cursor: pointer;
 }
