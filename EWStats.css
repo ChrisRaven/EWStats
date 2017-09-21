@@ -374,7 +374,9 @@
 #accu-more {
     color: #6688CC;
     display: inline-block;
+    font-size: 10pt;
     position: relative;
-    top: -10px;
+    top: -7px;
+    left: 10px;
     cursor: pointer;
 }
