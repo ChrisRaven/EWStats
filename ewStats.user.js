@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      0.2
+// @version      0.2.1
 // @description  Shows daily, weekly and monthly statistics for EyeWire
 // @author       Krzysztof Kruk
 // @match        https://eyewire.org/
@@ -30,10 +30,10 @@
     TB_COLOR = 'lightgray',
     RP_COLOR = '#0066FF',
     SC_COLOR = 'pink',
-    WT_0_COLOR = 'brown',
-    WT_1_COLOR = 'red',
-    WT_2_COLOR = 'orange',
-    WT_3_COLOR = 'yellow',
+    WT_0_COLOR = '#FF554D',
+    WT_1_COLOR = '#46DBE8',
+    WT_2_COLOR = '#9659FF',
+    WT_3_COLOR = '#93FF59',
     WT_4_COLOR = 'green';
 
   var
@@ -580,7 +580,7 @@
       cells = document.getElementsByClassName('accuracy-weight-stripe-cell');
 
     wt = Math.floor(wt);
-    color = weightToColor(wt--);
+    color = weightToColor(wt--); // wt1 = cells[0] filled in, hence wt--
 
     for (i = 0; i <= wt && i < 4; i++) {
       cells[i].style.backgroundColor = color;
@@ -628,10 +628,7 @@
     html += '<div id="accuracy-block">';
     html += '<div id="accuracy-value">no data</div>';
     html += '<div id="accuracy-weight-stripe">';
-    html += '<div class="accuracy-weight-stripe-cell"></div>';
-    html += '<div class="accuracy-weight-stripe-cell"></div>';
-    html += '<div class="accuracy-weight-stripe-cell"></div>';
-    html += '<div class="accuracy-weight-stripe-cell"></div>';
+    html += '<div class="accuracy-weight-stripe-cell"></div>'.repeat(4);
     html += '</div>';
     html += '</div>';
 
@@ -643,7 +640,7 @@
       updateAccuracyWeight(values[i].wt);
     }
 
-    $('body').append('<div id="accu-floating-label"></div>');
+    $('#content').append('<div id="accu-floating-label"></div>');
   }
 
   function updateAccuracyBar(index, accu, data) {
@@ -680,7 +677,27 @@
     updateAccuracyBars();
   }
 
+  var originalSaveTask = tomni.taskManager.saveTask;
+    tomni.taskManager.saveTask = function() {
+      getCubeData(arguments);
+      originalSaveTask.apply(this, arguments);
+    };
+
+  var cubeData;
+
+  function getCubeData() {
+    cubeData = {
+      cubeId: tomni.task.id,
+      cellId: tomni.cell,
+      level: tomni.getCurrentCell().info.difficulty
+    };
+  }
+
   $(document).on('cube-submission-data', function (event, data) {
+    var
+      cubeId = cubeData.cubeId,
+      cellId = cubeData.cellId;
+
     var int = setInterval(function () {
       if (!data || data.status !== 'finished') {
         return;
@@ -688,10 +705,8 @@
 
       var
         accuracy = Math.floor(data.accuracy * 10000) / 100,
-        cubeId = tomni.task.id,
         url = '/1.0/task/' + cubeId,
         val,
-        cellId = tomni.cell,
         timestamp = new Date().toLocaleString('en-US');
 
       if (data.special === 'scythed') {
@@ -729,11 +744,12 @@
     createMap();
     createChart('points');
 
-    generateAccuracyWidgetHTML();
+    generateAccuracyWidgetHTML(); // ACCURACY CHART
   }
 
   init();
 
+  // ACCURACY CHART
   $("#accuracy-bars-wrapper")
     .on('mouseenter', '.accuracy-bar-cover', function(event) {
       var
@@ -745,8 +761,11 @@
         return;
       }
 
-     lbl.style.display = 'block';
-      lbl.style.left = getComputedStyle(this).left;
+      lbl.style.display = 'block';
+      lbl.style.width = '230px';
+      lbl.style.height = '160px';
+      lbl.style.left = this.getBoundingClientRect().left + 'px';
+      lbl.style.top = this.getBoundingClientRect().bottom + 'px';
 
       if (typeof data.val === 'string') {
         if (data.val === 'TB') {
@@ -795,6 +814,37 @@
 
     window.open(window.location.origin + "?tcJumpTaskId=" + data.cubeId);
   });
+
+  $('#accuracy-weight-stripe')
+    .on('mouseenter', function () {
+      var
+        html = '',
+        lbl = document.getElementById('accu-floating-label');
+
+      lbl.style.width = '190px';
+      lbl.style.height = '120px';
+      lbl.style.display = 'block';
+      lbl.style.left = this.getBoundingClientRect().left + 'px';
+      lbl.style.top = this.getBoundingClientRect().bottom + 'px';
+
+      function div(weight) {
+        return '<div class="accu-wt-lbl-cell" style="background-color: ' + weightToColor(weight) + ';"></div>';
+      }
+
+      html = '<table>';
+      html += '<tr><td>' + div(1)           + '</td><td>weight = 1</td></tr>';
+      html += '<tr><td>' + div(2).repeat(2) + '</td><td>weight = 2</td></tr>';
+      html += '<tr><td>' + div(3).repeat(3) + '</td><td>weight = 3</td></tr>';
+      html += '<tr><td>' + div(4).repeat(4) + '</td><td>weight &ge; 4</td></tr>';
+      html += '<tr><td>' + div(0).repeat(4) + '</td><td>no cubes played yet</td></tr>';
+      html += '</table>';
+
+      lbl.innerHTML = html;
+    })
+    .on('mouseleave', function () {
+      document.getElementById('accu-floating-label').style.display = 'none';
+    });
+  // end: ACCURACY CHART
 
   $('#ewsLink').click(function () {
     $(panel).dialog('open');
@@ -939,5 +989,4 @@ $(document)
       getMockupData();
     }
   });
-
 })();
