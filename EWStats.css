@@ -355,3 +355,11 @@
 #accu-floating-label td:nth-child(1) {
     color: gray;
 }
+
+#accu-more {
+    color: #6688CC;
+    display: inline-block;
+    position: absolute;
+    top: 20px;
+    cursor: pointer;
+}
