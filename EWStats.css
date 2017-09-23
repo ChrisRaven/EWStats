@@ -400,7 +400,7 @@
     position: absolute;
     height: 44px;
     width: 250px;
-    top:-44px;
+    top: 0;
     right: 220px;
     background-color: yellow;
     z-index: 4;
@@ -409,6 +409,7 @@
 #more-less-button {
     display: inline-block;
     position: relative;
+    float: left;
     top: 20px;
     min-height: 1px;
     background-color: navy;
@@ -424,6 +425,7 @@
 }
 
 #accuracy-bars-wrapper-2 {
+    display: inline-block;
     width: 161px;
     height: 250px;
     min-height: 1px;
