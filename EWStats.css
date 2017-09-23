@@ -389,4 +389,5 @@
     background-color: blue;
     position: absolute;
     display: none;
+    z-index: 8;
 }
