@@ -408,13 +408,15 @@
 #accuracy-bars-wrapper-2 {
     display: inline-block;
     width: 161px;
-    height: 350px;
+    height: 391px;
     min-height: 1px;
     background-color: #1e1e1e;
     overflow: hidden;
+    font-size: 1px;
 }
 
 .separator-line {
+    height: 20px;
     width: 160px;
     background: url(line.svg) no-repeat 0;
 }
