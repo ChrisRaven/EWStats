@@ -413,3 +413,8 @@
     background-color: #1e1e1e;
     overflow: hidden;
 }
+
+.separator-line {
+    width: 160px;
+    background: url(line.svg) no-repeat 0;
+}
