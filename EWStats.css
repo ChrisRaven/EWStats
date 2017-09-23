@@ -391,3 +391,36 @@
     display: none;
     z-index: 8;
 }
+
+
+    #accuracy-container {
+        position: absolute;
+        height: 44px;
+        width: 250px;
+        top:0;
+        background-color: yellow;
+    }
+
+    #more-less-button {
+        display: inline-block;
+        position: relative;
+        top: 20px;
+        min-height: 1px;
+        background-color: navy;
+    }
+
+    #weight-wrapper {
+        display: inline-block;
+        position: relative;
+        margin-left: auto;
+        margin-right: 0;
+        min-height: 1px;
+        background-color:green;
+    }
+
+    #accuracy-bars-wrapper-2 {
+        width: 161px;
+        height: 250px;
+        min-height: 1px;
+        background-color: blue;
+    }
