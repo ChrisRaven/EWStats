@@ -397,9 +397,10 @@
         position: absolute;
         height: 44px;
         width: 250px;
-        top:0;
+        top:-44px;
         right: 220px;
         background-color: yellow;
+        z-index: 4;
     }
 
     #more-less-button {
