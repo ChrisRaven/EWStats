@@ -381,8 +381,7 @@
     width: 265px;
     top: 0;
     right: 220px;
-    /*background-color: yellow;*/
-    z-index: 4;
+    z-index: 10;
 }
 
 #more-less-button {
@@ -391,7 +390,6 @@
     float: left;
     top: 20px;
     min-height: 1px;
-    /*background-color: navy;*/
     color: #6688CC;
     font-size: 10pt;
     cursor: pointer;
@@ -405,7 +403,6 @@
     margin-left: auto;
     margin-right: 0;
     min-height: 1px;
-    /*background-color:green;*/
 }
 
 #accuracy-bars-wrapper-2 {
@@ -413,5 +410,5 @@
     width: 161px;
     height: 250px;
     min-height: 1px;
-    /*background-color: orange;*/
+    background-color: #1e1e1e;
 }
