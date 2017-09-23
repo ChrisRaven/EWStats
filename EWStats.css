@@ -390,7 +390,7 @@
     width: 160px;
     height: 250px;
     min-height: 100px;
-    background-color: blue;
+    /*background-color: blue;*/
     position: absolute;
     display: none;
     z-index: 8;
@@ -399,10 +399,10 @@
 #accuracy-container {
     position: absolute;
     height: 44px;
-    width: 250px;
+    width: 265px;
     top: 0;
     right: 220px;
-    background-color: yellow;
+    /*background-color: yellow;*/
     z-index: 4;
 }
 
@@ -412,16 +412,20 @@
     float: left;
     top: 20px;
     min-height: 1px;
-    background-color: navy;
+    /*background-color: navy;*/
+    color: #6688CC;
+    font-size: 10pt;
+    cursor: pointer;
 }
 
 #weight-wrapper {
     display: inline-block;
     position: relative;
+    float: right;
     margin-left: auto;
     margin-right: 0;
     min-height: 1px;
-    background-color:green;
+    /*background-color:green;*/
 }
 
 #accuracy-bars-wrapper-2 {
@@ -429,5 +433,5 @@
     width: 161px;
     height: 250px;
     min-height: 1px;
-    background-color: orange;
+    /*background-color: orange;*/
 }
