@@ -375,27 +375,6 @@
     color: gray;
 }
 
-#accu-more {
-    color: #6688CC;
-    display: inline-block;
-    font-size: 10pt;
-    position: relative;
-    top: -7px;
-    left: 10px;
-    cursor: pointer;
-    width: 45px;
-}
-
-#accu-more-panel {
-    width: 160px;
-    height: 250px;
-    min-height: 100px;
-    /*background-color: blue;*/
-    position: absolute;
-    display: none;
-    z-index: 8;
-}
-
 #accuracy-container {
     position: absolute;
     height: 44px;
@@ -416,6 +395,7 @@
     color: #6688CC;
     font-size: 10pt;
     cursor: pointer;
+    width: 45px;
 }
 
 #weight-wrapper {
