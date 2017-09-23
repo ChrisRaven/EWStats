@@ -381,3 +381,12 @@
     cursor: pointer;
     width: 45px;
 }
+
+#accu-more-panel {
+    width: 160px;
+    height: 250px;
+    min-height: 100px;
+    background-color: blue;
+    position: absolute;
+    display: none;
+}
