@@ -408,7 +408,8 @@
 #accuracy-bars-wrapper-2 {
     display: inline-block;
     width: 161px;
-    height: 250px;
+    height: 350px;
     min-height: 1px;
     background-color: #1e1e1e;
+    overflow: hidden;
 }
