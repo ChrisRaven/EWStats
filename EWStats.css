@@ -418,5 +418,5 @@
 .separator-line {
     height: 20px;
     width: 160px;
-    background: url(line.svg) no-repeat 0;
+    background: url(line_with_arrow.svg) no-repeat 0;
 }
