@@ -268,7 +268,8 @@
     display: inline;
 }
 
-.accuracy-bar-cover {
+.accuracy-bar-cover,
+.accuracy-bar-cover-2 {
     position: absolute;
     width: 15px;
     margin-right: 1px;
@@ -279,7 +280,12 @@
     z-index: 1;
 }
 
-.accuracy-bar-cover:hover {
+.accuracy-bar-cover-2 {
+    top: auto;
+}
+
+.accuracy-bar-cover:hover,
+.accuracy-bar-cover-2:hover {
     background-color: white;
     opacity: 0.2;
 }
