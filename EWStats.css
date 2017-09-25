@@ -414,7 +414,7 @@
 #accuracy-bars-wrapper-2 {
     display: inline-block;
     width: 161px;
-    height: 391px;
+    height: 44px;
     min-height: 1px;
     background-color: #1e1e1e;
     overflow: hidden;
@@ -425,4 +425,8 @@
     height: 20px;
     width: 160px;
     background: url(line_with_arrow.svg) no-repeat 0;
+}
+
+.hideable-bar {
+    display: none;
 }
