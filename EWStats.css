@@ -284,8 +284,6 @@
     border: 1px solid #1e1e1e;
     margin: 0 -1px;
     z-index: 1;
-    position: absolute;
-    bottom: 0;
 }
 
 .accuracy-bar-cover-2-highlighted {
@@ -310,6 +308,8 @@
 
 .accuracy-bar-2 {
     max-height: 44px;
+    position: absolute;
+    bottom: 0;
 }
 
 #accuracy-bar-atlas {
