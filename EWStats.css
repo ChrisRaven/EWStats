@@ -283,7 +283,7 @@
 .accuracy-bar-cover-2 {
     top: auto;
     border: 1px solid black;
-    margin-right: -1px;
+    margin: 0 -1px;
 }
 
 .accuracy-bar-cover:hover,
