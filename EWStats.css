@@ -308,8 +308,6 @@
 
 .accuracy-bar-2 {
     max-height: 44px;
-    position: absolute;
-    bottom: 0;
 }
 
 #accuracy-bar-atlas {
