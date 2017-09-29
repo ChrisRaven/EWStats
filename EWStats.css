@@ -282,8 +282,14 @@
 
 .accuracy-bar-cover-2 {
     top: auto;
-    border: 1px solid black;
+    border: 1px solid #1e1e1e;
     margin: 0 -1px;
+    z-index: 1;
+}
+
+.accuracy-bar-cover-2-highlighted {
+    border: 1px solid yellow;
+    z-index: 2;
 }
 
 .accuracy-bar-cover:hover,
