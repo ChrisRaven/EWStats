@@ -338,6 +338,7 @@
     font-size: 10pt;
     color: #e4e1e1;
     padding-top: 7px;
+    text-align: center;
 }
 
 .accuracy-weight-stripe-cell,
