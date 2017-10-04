@@ -285,6 +285,7 @@
     margin: 0 -1px;
     z-index: 1;
     height: 43px;
+    top: auto;
 }
 
 .accuracy-bar-cover-2-highlighted {
