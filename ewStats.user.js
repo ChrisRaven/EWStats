@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      0.2.1
-// @description  Shows daily, weekly and monthly statistics for EyeWire
+// @version      1.0.0
+// @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
-// @match        https://eyewire.org/
+// @match        https://*.eyewire.org/
 // @downloadURL  https://raw.githubusercontent.com/ChrisRaven/EWStats/master/ewStats.user.js
 // @updateURL    https://raw.githubusercontent.com/ChrisRaven/EWStats/master/ewStats.meta.js
 // @grant        GM_getResourceText
@@ -44,7 +44,8 @@
     dataType = 'points',
     timeRange = 'day',
     dataCurrentlyInUse,
-    accuData = new Array(10);
+    accuData = new Array(60),
+    refreshData = false;
 
   var countries = JSON.parse(GM_getResourceText('countries'));
 
@@ -62,8 +63,12 @@
     $("head").append('<link href="' + path + '" rel="stylesheet" type="text/css">');
   }
 
-  addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css');
+  addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=2');
   addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
+
+  function gid(id) {
+    return document.getElementById(id);
+  }
 
 
   function addMenuItem() {
@@ -76,7 +81,7 @@
     a.id = 'ewsLink';
     a.innerHTML = 'Stats';
     li.appendChild(a);
-    list = document.getElementById('nav').getElementsByTagName('ul')[0];
+    list = gid('nav').getElementsByTagName('ul')[0];
     list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
   }
 
@@ -253,7 +258,7 @@
   }
 
   function createChart(label) {
-      var ctx = document.getElementById("ewsChart").getContext('2d');
+      var ctx = gid("ewsChart").getContext('2d');
       chart = new Chart(ctx, {
         type: 'doughnut',
         data: {
@@ -393,8 +398,8 @@
     }
 
 
-    document.getElementById('ewsChartCenterLabel').innerHTML = html1 + '<br><span>' + sumValues(data) + '</span><br>' + html2 + html3;
-    document.getElementById('ewsChartLegend').innerHTML = chart.generateLegend(); // custom legend
+    gid('ewsChartCenterLabel').innerHTML = html1 + '<br><span>' + sumValues(data) + '</span><br>' + html2 + html3;
+    gid('ewsChartLegend').innerHTML = chart.generateLegend(); // custom legend
   }
 
   // source: https://stackoverflow.com/a/11811767
@@ -524,7 +529,11 @@
   }
 
   function aRow(ordinal, color, height, data) {
-    return '<div class="accuracy-bar" id="accuracy-bar-' + ordinal + '" style="background-color: ' + color + '; height: ' + height + '%;" data-accuracy=\''+ JSON.stringify(data) /*html*/ + '\'></div>';
+    return '<div ' +
+      'class="accuracy-bar-2" id="accuracy-bar-2-' + ordinal + '" ' +
+      'style="background-color: ' + color + '; height: ' + height * 0.44 + 'px; margin-top: ' + (44 - height * 0.44) + 'px;" ' + // margin added to fix problem, when bars were "glued" to the top, when there weren't any 100% (44px) height bars
+      'data-accuracy=\''+ JSON.stringify(data) +
+    '\'></div>';
   }
 
   function accuColor(val) {
@@ -555,7 +564,10 @@
   }
 
   function updateAccuracyValue(val) {
-    document.getElementById('accuracy-value').innerHTML = val + (typeof val === 'string' ? '' : '%');
+    var el = gid('accuracy-value');
+
+    el.style.color = typeof val === 'number' && val === 100 ? '#00FF00' : '#E4E1E1';
+    el.innerHTML = val + (typeof val === 'string' ? '' : '%');
   }
 
   function weightToColor(wt) {
@@ -593,17 +605,194 @@
     }
   }
 
+  function addLinesIfNeeded() {
+    var
+      l1 = gid('separator-line-1'),
+      l2 = gid('separator-line-2'),
+      l3 = gid('separator-line-3'),
+      l4 = gid('separator-line-4'),
+      l5 = gid('separator-line-5');
+
+    function check(arg) {
+      var data = gid('accuracy-bar-2-' + arg).dataset.accuracy;
+
+      return !!(data && data !== '{}');
+    }
+
+    if (l5) l5.style.display = check(49) && check(50) ? 'block' : 'none';
+    if (l4) l4.style.display = check(39) && check(40) ? 'block' : 'none';
+    if (l3) l3.style.display = check(29) && check(30) ? 'block' : 'none';
+    if (l2) l2.style.display = check(19) && check(20) ? 'block' : 'none';
+    if (l1) l1.style.display = check( 9) && check(10) ? 'block' : 'none';
+  }
+
+  // update from older version of the script, where there were only 10 bars
+  function updateDataFormat(arr) {
+    var
+      i, j, newArr = [],
+      len = arr.length;
+
+    if (len === 60) {
+      return arr;
+    }
+
+    for (i = 0; i <60 - len; i++) {
+      newArr.push(null);
+    }
+    for (j = 0; i < 60; i++, j++) {
+      newArr.push(arr[j]);
+    }
+
+    return newArr;
+  }
+
+  function highlightBar(id) {
+    $('.accuracy-bar-cover-2-highlighted').removeClass('accuracy-bar-cover-2-highlighted');
+    $('#accuracy-bar-2-' + id).prev().addClass('accuracy-bar-cover-2-highlighted');
+
+    localStorage.setItem('ewsLastHighlighted', id);
+  }
+
+  function updateAccuracyBar(index, accu, data, changeColor) {
+    var el = gid('accuracy-bar-2-' + index);
+
+    if (typeof changeColor === 'undefined') {
+      changeColor = true;
+    }
+
+    if (el) {
+      el.style.height = (typeof accu === 'number' ? accu * 0.44 : '44') + 'px';
+      if (changeColor) {
+        el.style.backgroundColor = accuColor(accu);
+      }
+      el.style.marginTop = (typeof accu === 'number' ? 44 - accu * 0.44 : '0') + 'px';
+      el.dataset.accuracy = JSON.stringify(data);
+    }
+
+    if (el.dataset.accuracy && el.dataset.accuracy !== '{}') {
+      el.previousSibling.style.visibility = 'visible';
+    }
+    else {
+      el.previousSibling.style.visibility = 'hidden';
+    }
+  }
+
+  function animateRefreshProgressBar() {
+    $('.accu-refresh-progress-bar').animate({value: "0"}, {
+      duration: 60000,
+      easing: 'linear',
+      complete: refreshAccuDataFromServer
+    });
+  }
+
+  function refreshAccuDataFromServer() {
+    var
+      waiting = 2;
+
+    document.getElementsByClassName('accu-refresh-progress-bar')[0].value = 100;
+
+    if (!refreshData) {
+      animateRefreshProgressBar(); // to still check every minute, if there's something to refresh, but not to connect to the server, if there isn't anything
+      return;
+    }
+
+    $('.accu-refresh-progress-bar').addClass('accu-refresh-progress-bar-refreshing');
+
+    $.getJSON('https://eyewire.org//1.0/player/accuracyBreakdown/1', function (data) {
+      var
+      i, len, el, accu, elData,
+          indexedData = {};
+
+      if (!data) {
+        return;
+      }
+      if (!--waiting) {
+        $('.accu-refresh-progress-bar').removeClass('accu-refresh-progress-bar-refreshing');
+        animateRefreshProgressBar();
+      }
+
+      for (i = 0, len = data.length; i < len; i++) {
+        indexedData[data[i].task_id] = data[i];
+      }
+
+      for (i = 0, len = accuData.length; i < len; i++) {
+        if (accuData[i] && accuData[i].cubeId) {
+        el = indexedData[accuData[i].cubeId];
+          if (el) {
+            accu = 200 * el.tp / (2 * el.tp + el.fp + el.fn);
+            elData = accuData[i];
+            elData.val = accu;
+            accuData[i] = elData;
+            updateAccuracyBar(i, accu, elData, false);
+          }
+        }
+      }
+
+      localStorage.setItem('ewsAccuData', JSON.stringify(accuData));
+    });
+
+    $.getJSON('https://eyewire.org//1.0/player/accuracyBreakdown/2', function (data) { // both getJSON()'s not in a function, to keep "waiting" in context
+      var
+      i, len, el, accu, elData,
+          indexedData = {};
+
+      if (!data) {
+        return;
+      }
+      if (!--waiting) {
+        $('.accu-refresh-progress-bar').removeClass('accu-refresh-progress-bar-refreshing');
+        animateRefreshProgressBar();
+      }
+
+      for (i = 0, len = data.length; i < len; i++) {
+        indexedData[data[i].task_id] = data[i];
+      }
+
+      for (i = 0, len = accuData.length; i < len; i++) {
+        if (accuData[i] && accuData[i].cubeId) {
+        el = indexedData[accuData[i].cubeId];
+          if (el) {
+            accu = 200 * el.tp / (2 * el.tp + el.fp + el.fn);
+            elData = accuData[i];
+            elData.val = accu;
+            accuData[i] = elData;
+            updateAccuracyBar(i, accu, elData, false);
+          }
+        }
+      }
+
+      localStorage.setItem('ewsAccuData', JSON.stringify(accuData));
+    });
+  }
+
   function generateAccuracyWidgetHTML() {
     var
-      i, len, html = '<div id="accuracy-bars-wrapper">',
-      values = localStorage.getItem('ewsAccuData');
+      i, len, html = '',
+      contFlag = false,
+      row,
+      values = localStorage.getItem('ewsAccuData'),
+      lastHighlightedBar = localStorage.getItem('ewsLastHighlighted');
 
-    html += generateAccuracyChartHTMLRow(11);
+    $('body').append(
+      '<div id="accuracy-container">' +
+        '<span id="more-less-button" data-state="closed">more &darr;</span>' +
+        '<div id="accuracy-bars-wrapper-2"></div>' +
+        '<div id="weight-wrapper">' +
+          '<div id="accuracy-value">no data</div>' +
+          '<div id="accuracy-weight-stripe">' +
+          '<div class="accuracy-weight-stripe-cell"></div>'.repeat(4) +
+        '</div>' +
+      '</div>'
+    );
+
     if (values) {
-      values = JSON.parse(values);
+      refreshData = true;
+
+      values = updateDataFormat(JSON.parse(values)); // to migrate from the old 10-cubes format
       accuData = values;
-      for (i = 0, len = values.length; i < len; i++) {
-        html += '<div class="accuracy-bar-cover"></div>';
+      for (len = values.length, i = len - 10; i > -1; (i + 1) % 10 && !contFlag ? i++ : (i -=19, contFlag = true)) { // i = 50..59, 40..49, (...), 0..9
+        contFlag = false;
+        html += '<div class="accuracy-bar-cover-2' + (i >= 50 ? ' permanent-bar' : ' hideable-bar') + '" " style="visibility: ' + (values[i] ? 'visible' : 'hidden') + ';"></div>';
         html += generateAccuracyChartHTMLRow(i, values[i] ? values[i].val : undefined, values[i] ? {
           val: values[i].val,
           wt: values[i].wt,
@@ -613,49 +802,46 @@
           cubeId: values[i].cubeId,
           timestamp: values[i].timestamp
         } : {});
+
+        row = Math.floor(i / 10);
+        if ((i + 1) % 10 === 0 && i > 10) {
+          html += '<div class="separator-line" id="separator-line-' + row + '" style="display: none;"></div>';
+        }
       }
     }
     else {
-      for (i = 0; i < 10; i++) {
-        html += '<div class="accuracy-bar-cover"></div>';
+      for (len = 60, i = len - 10; i > -1; (i + 1) % 10 && !contFlag ? i++ : (i -=19, contFlag = true)) { // i = 50..59, 40..49, (...), 0..9
+        contFlag = false;
+        html += '<div class="accuracy-bar-cover-2' + (i >= 50 ? ' permanent-bar' : ' hideable-bar') + '" style="visibility: hidden;"></div>';
         html += generateAccuracyChartHTMLRow(i, undefined, {});
+
+        row = Math.floor(i / 10);
+        if ((i + 1) % 10 === 0 && i > 10) {
+          html += '<div class="separator-line" id="separator-line-' + row + '" style="display: none;"></div>';
+        }
       }
     }
 
-    html += '</div>';
+    html += '<progress class="accu-refresh-progress-bar" value="100" max="100"></progress>';
+    gid('accuracy-bars-wrapper-2').innerHTML = html;
+    addLinesIfNeeded();
 
-    html += '<div id="accuracy-bar-atlas"></div>';
-    html += '<div id="accuracy-block">';
-    html += '<div id="accuracy-value">no data</div>';
-    html += '<div id="accuracy-weight-stripe">';
-    html += '<div class="accuracy-weight-stripe-cell"></div>'.repeat(4);
-    html += '</div>';
-    html += '</div>';
+    if (values && typeof values[59] !== 'undefined') {
+      updateAccuracyValue(values[59].val);
+      updateAccuracyWeight(values[59].wt);
 
-    $('#acc').after('<div id="accuracy-chart">' + html + '</div>');
-
-    i--;
-    if (values && typeof values[i] !== 'undefined') {
-      updateAccuracyValue(values[i].val);
-      updateAccuracyWeight(values[i].wt);
+      if (lastHighlightedBar) {
+        highlightBar(lastHighlightedBar);
+      }
     }
 
     $('#content').append('<div id="accu-floating-label"></div>');
-  }
 
-  function updateAccuracyBar(index, accu, data) {
-    var el = document.getElementById('accuracy-bar-' + index);
-
-    if (el) {
-      el.style.height = (typeof accu === 'number' ? accu : '100') + '%';
-      el.style.backgroundColor = accuColor(accu);
-      el.dataset.accuracy = JSON.stringify(data);
-    }
+    animateRefreshProgressBar();
   }
 
   function updateAccuracyBars() {
-    var
-      i, el;
+    var i;
 
     for (i = 0; i < accuData.length; i++) {
       updateAccuracyBar(i, !accuData[i] ? undefined : accuData[i].val, accuData[i] ? {
@@ -668,13 +854,41 @@
         timestamp: accuData[i].timestamp
       } : {});
     }
+
+    addLinesIfNeeded();
   }
 
   function addAccuracyBar(val, wt, lvl, score, cellId, cubeId, timestamp) {
+    refreshData = true;
+
     accuData.push({val: val, wt: wt, lvl: lvl, score: score, cellId: cellId, cubeId: cubeId, timestamp: timestamp});
     accuData.shift();
     localStorage.setItem('ewsAccuData', JSON.stringify(accuData));
     updateAccuracyBars();
+    highlightBar(59);
+  }
+
+  function updatePlayedAccuracyBar(barId, val, wt, score, timestamp) { // when player reaps a cube, which was already on the list
+    var
+     prevData,
+     data,
+     el = gid('accuracy-bar-2-' + barId);
+
+    if (el) {
+      el.style.height = (typeof val === 'number' ? val * 0.44 : '44') + 'px';
+      el.style.marginTop = (typeof val === 'number' ? 44 - val * 0.44 : '0') + 'px';
+      el.style.backgroundColor = accuColor(val);
+      data = JSON.parse(el.dataset.accuracy);
+      data.val = val;
+      data.wt = wt;
+      data.score = score;
+      data.timestamp = timestamp;
+      el.dataset.accuracy = JSON.stringify(data);
+    }
+
+    accuData[barId] = data;
+    localStorage.setItem('ewsAccuData', JSON.stringify(accuData));
+    highlightBar(barId);
   }
 
   var originalSaveTask = tomni.taskManager.saveTask;
@@ -691,6 +905,21 @@
       cellId: tomni.cell,
       level: tomni.getCurrentCell().info.difficulty
     };
+  }
+
+  function wasRecentlyPlayed(id) {
+    var
+      i, len = accuData.length;
+
+    if (len) {
+      for (i = 0; i < len; i++) {
+        if (accuData[i] && accuData[i].cubeId === id) {
+          return i;
+        }
+      }
+    }
+
+    return -1;
   }
 
   $(document).on('cube-submission-data', function (event, data) {
@@ -722,13 +951,23 @@
       clearInterval(int);
 
       $.getJSON(url, function (JSONdata) {
-        var weight = JSONdata.prior.weight + 1; // weight is updated on the server only after about a minute or so
+        var
+          barId,
+          weight = JSONdata.prior.weight + 1; // weight is updated on the server only after about a minute or so
 
         if (data.special === 'scythed') {
           weight += 2;
         }
+
+        weight = Math.round(weight * 10) / 10;
         updateAccuracyWeight(weight);
-        addAccuracyBar(val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
+        barId = wasRecentlyPlayed(cubeId);
+        if (barId !== -1) {
+          updatePlayedAccuracyBar(barId, val, weight, data.score, timestamp);
+        }
+        else {
+          addAccuracyBar(val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
+        }
       });
       updateAccuracyValue(val);
       }, 100);
@@ -740,7 +979,7 @@
     addMenuItem();
     $('body').append(GM_getResourceText('base_html'));
 
-    panel = document.getElementById('ewsPanel');
+    panel = gid('ewsPanel');
     createMap();
     createChart('points');
 
@@ -750,11 +989,11 @@
   init();
 
   // ACCURACY CHART
-  $("#accuracy-bars-wrapper")
-    .on('mouseenter', '.accuracy-bar-cover', function(event) {
+  $('#accuracy-bars-wrapper-2')
+    .on('mouseenter', '.accuracy-bar-cover-2', function(event) {
       var
         html, action, value,
-        lbl = document.getElementById('accu-floating-label'),
+        lbl = gid('accu-floating-label'),
         data = JSON.parse(this.nextSibling.dataset.accuracy);
 
       if (!data || typeof data.val === 'undefined') {
@@ -785,7 +1024,7 @@
       html = '<table>';
       html += '<tr><td>Action</td><td>' + action + '</td></tr>';
       html += '<tr><td>Accuracy</td><td>' + value + '</td></tr>';
-      html += '<tr><td>Weight</td><td>' + data.wt + '</td></tr>';
+      html += '<tr><td>Weight</td><td>' + data.wt.toFixed(1) + '</td></tr>';
       html += '<tr><td>Score</td><td>' + data.score + '</td></tr>';
       html += '<tr><td>Cell ID</td><td>' + data.cellId + '</td></tr>';
       html += '<tr><td>Cube ID</td><td>' + data.cubeId + '</td></tr>';
@@ -793,10 +1032,10 @@
       html += '</table>';
       lbl.innerHTML = html;
   })
-  .on('mouseleave', '.accuracy-bar-cover', function(event) {
-    document.getElementById('accu-floating-label').style.display = 'none';
+  .on('mouseleave', '.accuracy-bar-cover-2', function(event) {
+    gid('accu-floating-label').style.display = 'none';
   })
-  .on('click', '.accuracy-bar-cover', function (event) {
+  .on('click', '.accuracy-bar-cover-2', function (event) {
     var data = JSON.parse(this.nextSibling.dataset.accuracy);
 
     if (!data || typeof data.cubeId === 'undefined') {
@@ -805,7 +1044,7 @@
 
     tomni.jumpToTaskID(data.cubeId);
   })
-  .on('contextmenu', '.accuracy-bar-cover', function (event) {
+  .on('contextmenu', '.accuracy-bar-cover-2', function (event) {
     var data = JSON.parse(this.nextSibling.dataset.accuracy);
 
     if (!data || typeof data.cubeId === 'undefined') {
@@ -819,7 +1058,7 @@
     .on('mouseenter', function () {
       var
         html = '',
-        lbl = document.getElementById('accu-floating-label');
+        lbl = gid('accu-floating-label');
 
       lbl.style.width = '190px';
       lbl.style.height = '120px';
@@ -832,9 +1071,9 @@
       }
 
       html = '<table>';
-      html += '<tr><td>' + div(1)           + '</td><td>weight = 1</td></tr>';
-      html += '<tr><td>' + div(2).repeat(2) + '</td><td>weight = 2</td></tr>';
-      html += '<tr><td>' + div(3).repeat(3) + '</td><td>weight = 3</td></tr>';
+      html += '<tr><td>' + div(1)           + '</td><td>1 &ge; weight &lt; 2</td></tr>';
+      html += '<tr><td>' + div(2).repeat(2) + '</td><td>2 &ge; weight &lt; 3</td></tr>';
+      html += '<tr><td>' + div(3).repeat(3) + '</td><td>3 &ge; weight &lt; 4</td></tr>';
       html += '<tr><td>' + div(4).repeat(4) + '</td><td>weight &ge; 4</td></tr>';
       html += '<tr><td>' + div(0).repeat(4) + '</td><td>no cubes played yet</td></tr>';
       html += '</table>';
@@ -842,8 +1081,26 @@
       lbl.innerHTML = html;
     })
     .on('mouseleave', function () {
-      document.getElementById('accu-floating-label').style.display = 'none';
+      gid('accu-floating-label').style.display = 'none';
     });
+
+  $('#more-less-button').click(function () {
+    var panel = gid('accuracy-bars-wrapper-2');
+
+    if (this.dataset.state === 'closed') {
+
+      this.dataset.state = 'opened';
+      this.innerHTML = 'less &uarr;';
+      panel.style.height = '371px';
+      $('.hideable-bar').css('display', 'inline-block');
+    }
+    else {
+      this.dataset.state = 'closed';
+      this.innerHTML = 'more &darr;';
+      panel.style.height = '44px';
+      $('.hideable-bar').css('display', 'none');
+    }
+  });
   // end: ACCURACY CHART
 
   $('#ewsLink').click(function () {
@@ -861,6 +1118,7 @@
       }
     }
 }));
+
 
 // source: https://stackoverflow.com/a/68503
 $(document)
@@ -881,7 +1139,7 @@ $(document)
     modal: true,
     show: true,
     dialogClass: 'ews-dialog',
-    title: 'EyeWire Statistics <div class="blinky" id=ewsLoader>',//'EyeWire Statistics <img src="https://chrisraven.github.io/EWStats/preloader.gif">',
+    title: 'EyeWire Statistics <div class="blinky" id=ewsLoader>',
     width: 900,
     open: function (event, ui) {
       $('.ui-widget-overlay').click(function() { // close by clicking outside the window
