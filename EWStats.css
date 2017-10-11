@@ -473,6 +473,7 @@
 
 #ewsSCHistoryWrapper td:nth-child(2) {
     padding-right: 15px;
+    cursor: pointer;
 }
 
 .SCHistory-50 {
