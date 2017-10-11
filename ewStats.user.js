@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.1.1
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -573,7 +573,7 @@
       return '<div ' +
         'class="accuracy-bar-2" id="accuracy-bar-2-' + ordinal + '" ' +
         // margin added to fix problem, when bars were "glued" to the top, when there weren't any 100% (44px) height bars
-        'style="background-color: ' + color + '; height: ' + height * 0.44 + 'px; margin-top: ' + (44 - height * 0.44) + 'px;" ' +
+        'style="background-color: ' + color + '; height: ' + height * 0.44 + 'px; margin-top: ' + (44 - height * 0.44) + 'px;" ' + 
         'data-accuracy=\''+ JSON.stringify(data) +
       '\'></div>';
     };
@@ -1015,7 +1015,7 @@
   // SC HISTORY
   function SCHistory() {
     $('body').append('<div id="ewsSCHistory"><div id="ewsSCHistoryWrapper"></div></div>');
-
+    
     $('#ewsSCHistory').dialog({
       autoOpen: false,
       hide: true,
@@ -1059,12 +1059,12 @@
     }
 
     addJS_Node(stringFunc);
-
-
+    
+    
     this.updateCount = function (count, cellId, cellName, timestamp) {
       var
         lsHistory = localStorage.getItem('ewsSCHistory');
-
+      
       if (lsHistory && lsHistory !== '{}') {
         lsHistory = JSON.parse(lsHistory);
       }
@@ -1073,17 +1073,17 @@
       }
 
       lsHistory[cellId] = {count: count, ts: timestamp, name: cellName};
-
+      
       localStorage.setItem('ewsSCHistory', JSON.stringify(lsHistory));
     };
-
+    
     this.removeOldEntries = function () {
       var
         cellId,
         now = Date.now(),
         sevenDays = 1000 * 60 * 60 * 24 * 7,
         lsHistory = localStorage.getItem('ewsSCHistory');
-
+      
       if (lsHistory && lsHistory !== '{}') {
         lsHistory = JSON.parse(lsHistory);
         for (cellId in lsHistory) {
@@ -1095,14 +1095,14 @@
         }
       }
     };
-
+    
     this.updateDialogWindow = function () {
       var
         cellId,
         html, el,
         threshold,
         lsHistory = localStorage.getItem('ewsSCHistory');
-
+      
       if (lsHistory && lsHistory !== '{}') {
         lsHistory = JSON.parse(lsHistory);
         html = '<table><tr><th># of SCs</th><th>Cell Name</th><th>Cell ID</th><th>Timestamp</th></tr>';
@@ -1126,7 +1126,7 @@
       else {
         html = 'no cubes SCed for last 7 days or since installing the script';
       }
-
+      
       Utils.gid('ewsSCHistoryWrapper').innerHTML = html;
     };
   }
@@ -1147,7 +1147,7 @@
     list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
   }
 
-  Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=3');
+  Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=2');
   Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 
   addMenuItem();
@@ -1161,7 +1161,7 @@
   panel.createChart('points');
 
   chart.generateAccuracyWidgetHTML();
-
+  
   history.removeOldEntries();
 
 
@@ -1426,7 +1426,7 @@
     }
   });
   // end: EVENTS - ACCURACY CHART
-
+  
   // EVENTS - SC HISTORY
   $(document)
     .on('contextmenu', '#profileButton', function (e) {
@@ -1440,11 +1440,11 @@
         _data = data,
         host = window.location.hostname,
         targetUrl = 'https://';
-
+      
       if (host.indexOf('beta') !== -1) {
         targetUrl += 'beta.';
       }
-      else if (host.indexOd('chris') !== -1) {
+      else if (host.indexOf('chris') !== -1) {
         targetUrl += 'chris.';
       }
       targetUrl += 'eyewire.org/1.0/cell/' + data.cellId + '/tasks/complete/player';
