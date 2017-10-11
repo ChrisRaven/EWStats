@@ -465,3 +465,16 @@
 .accu-refresh-progress-bar-refreshing::-webkit-progress-value {
     background-color: #0000FF !important;
 }
+
+#ewsSCHistoryWrapper th {
+    text-align: left;
+    padding-right: 10px;
+}
+
+.SCHistory-50 {
+    color: yellow;
+}
+
+.SCHistory-100 {
+    color: #00FF00;
+}
