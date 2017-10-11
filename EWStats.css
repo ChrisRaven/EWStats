@@ -476,7 +476,7 @@
     cursor: pointer;
 }
 
-#ewsSCHistoryWrapper td:nth-child(6) {
+#ewsSCHistoryWrapper .sc-history-results {
     width: 150px;
 }
 
