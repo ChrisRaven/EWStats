@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2
+// @version      1.1
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -579,7 +579,21 @@
     };
 
 
-    this.accuColor = function (val) {
+    this.accuColor = function (val, action) {
+      if (action) {
+        if (action !== 'PL') {
+          switch (action) {
+            case 'TB': return TB_COLOR;
+            case 'SG': return SC_COLOR;
+            case 'RP': return RP_COLOR;
+          }
+        }
+        else if (action === 'PL') {
+          return this.getIntermediateColor(val / 100);
+        }
+      }
+
+      // for older versions of the script
       if (typeof val === 'string') {
         switch (val) {
           case 'TB': return TB_COLOR;
@@ -598,7 +612,7 @@
 
     this.generateAccuracyChartHTMLRow = function (ordinal, val, data) {
       var
-        color = this.accuColor(val);
+        color = this.accuColor(val, data.action);
 
       if (typeof val === 'string') {
         return this.aRow(ordinal, color, 100, data);
@@ -864,8 +878,9 @@
         accuData = values;
         for (len = values.length, i = len - 10; i > -1; (i + 1) % 10 && !contFlag ? i++ : (i -=19, contFlag = true)) { // i = 50..59, 40..49, (...), 0..9
           contFlag = false;
-          html += '<div class="accuracy-bar-cover-2' + (i >= 50 ? ' permanent-bar' : ' hideable-bar') + '" " style="visibility: ' + (values[i] ? 'visible' : 'hidden') + ';"></div>';
+          html += '<div class="accuracy-bar-cover-2 ' + (i >= 50 ? 'permanent-bar' : 'hideable-bar') + '" style="visibility: ' + (values[i] ? 'visible' : 'hidden') + ';"></div>';
           html += this.generateAccuracyChartHTMLRow(i, values[i] ? values[i].val : undefined, values[i] ? {
+            action: values[i].action,
             val: values[i].val,
             wt: values[i].wt,
             lvl: values[i].lvl,
@@ -884,7 +899,7 @@
       else {
         for (len = 60, i = len - 10; i > -1; (i + 1) % 10 && !contFlag ? i++ : (i -=19, contFlag = true)) { // i = 50..59, 40..49, (...), 0..9
           contFlag = false;
-          html += '<div class="accuracy-bar-cover-2' + (i >= 50 ? ' permanent-bar' : ' hideable-bar') + '" style="visibility: hidden;"></div>';
+          html += '<div class="accuracy-bar-cover-2 ' + (i >= 50 ? 'permanent-bar' : 'hideable-bar') + '" style="visibility: hidden;"></div>';
           html += this.generateAccuracyChartHTMLRow(i, undefined, {});
 
           row = Math.floor(i / 10);
@@ -919,6 +934,7 @@
 
       for (i = 0; i < accuData.length; i++) {
         this.updateAccuracyBar(i, !accuData[i] ? undefined : accuData[i].val, accuData[i] ? {
+          action: accuData[i].action,
           val: accuData[i].val,
           wt: accuData[i].wt,
           lvl: accuData[i].lvl,
@@ -933,10 +949,10 @@
     };
 
 
-    this.addAccuracyBar = function (val, wt, lvl, score, cellId, cubeId, timestamp) {
+    this.addAccuracyBar = function (action, val, wt, lvl, score, cellId, cubeId, timestamp) {
       refreshData = true;
 
-      accuData.push({val: val, wt: wt, lvl: lvl, score: score, cellId: cellId, cubeId: cubeId, timestamp: timestamp});
+      accuData.push({action: action, val: val, wt: wt, lvl: lvl, score: score, cellId: cellId, cubeId: cubeId, timestamp: timestamp});
       accuData.shift();
       localStorage.setItem('ewsAccuData', JSON.stringify(accuData));
       this.updateAccuracyBars();
@@ -944,7 +960,7 @@
     };
 
 
-    this.updatePlayedAccuracyBar = function (barId, val, wt, score, timestamp) { // when player reaps a cube, which was already on the list
+    this.updatePlayedAccuracyBar = function (action, barId, val, wt, score, timestamp) { // when player reaps a cube, which was already on the list
       var
         prevData,
         data,
@@ -953,8 +969,9 @@
       if (el) {
         el.style.height = (typeof val === 'number' ? val * 0.44 : '44') + 'px';
         el.style.marginTop = (typeof val === 'number' ? 44 - val * 0.44 : '0') + 'px';
-        el.style.backgroundColor = this.accuColor(val);
+        el.style.backgroundColor = this.accuColor(val, action);
         data = JSON.parse(el.dataset.accuracy);
+        data.action = 'RP';
         data.val = val;
         data.wt = wt;
         data.score = score;
@@ -994,6 +1011,128 @@
   }
   // end: ACCURACY CHART
 
+
+  // SC HISTORY
+  function SCHistory() {
+    $('body').append('<div id="ewsSCHistory"><div id="ewsSCHistoryWrapper"></div></div>');
+
+    $('#ewsSCHistory').dialog({
+      autoOpen: false,
+      hide: true,
+      modal: true,
+      show: true,
+      dialogClass: 'ews-dialog',
+      title: 'Cubes completed in cells SCed during last 7 days',
+      width: 600,
+      open: function (event, ui) {
+        $('.ui-widget-overlay').click(function() { // close by clicking outside the window
+          $('#ewsSCHistory').dialog('close');
+        });
+      }
+    });
+
+
+    // Source: https://stackoverflow.com/a/6805461
+    var stringFunc = `
+      (function (open) {
+        XMLHttpRequest.prototype.open = function (method, url, async, user, pass) {
+          this.addEventListener("readystatechange", function (evt) {
+            if (this.readyState == 4 && this.status == 200 &&
+                url.indexOf('/1.0/task/') !== -1 &&
+                url.indexOf('/submit') === -1 &&
+                method.toLowerCase() === 'post') {
+              $(document).trigger('votes-updated', {cellId: tomni.cell, cellName: tomni.getCurrentCell().info.name});
+            }
+          }, false);
+          open.call(this, method, url, async, user, pass);
+        };
+      }) (XMLHttpRequest.prototype.open)
+    `;//.toString();
+
+    function addJS_Node(text, s_URL) {
+      var scriptNode = document.createElement('script');
+      scriptNode.type = "text/javascript";
+      if (text) scriptNode.textContent = text;
+      if (s_URL) scriptNode.src = s_URL;
+      var targ = document.getElementsByTagName('head')[0] || document.body || document.documentElement;
+      targ.appendChild(scriptNode);
+    }
+
+    addJS_Node(stringFunc);
+
+
+    this.updateCount = function (count, cellId, cellName, timestamp) {
+      var
+        lsHistory = localStorage.getItem('ewsSCHistory');
+
+      if (lsHistory && lsHistory !== '{}') {
+        lsHistory = JSON.parse(lsHistory);
+      }
+      else {
+        lsHistory = {};
+      }
+
+      lsHistory[cellId] = {count: count, ts: timestamp, name: cellName};
+
+      localStorage.setItem('ewsSCHistory', JSON.stringify(lsHistory));
+    };
+
+    this.removeOldEntries = function () {
+      var
+        cellId,
+        now = Date.now(),
+        sevenDays = 1000 * 60 * 60 * 24 * 7,
+        lsHistory = localStorage.getItem('ewsSCHistory');
+
+      if (lsHistory && lsHistory !== '{}') {
+        lsHistory = JSON.parse(lsHistory);
+        for (cellId in lsHistory) {
+          if (lsHistory.hasOwnProperty(cellId)) {
+            if (lsHistory[cellId].ts - now > sevenDays) {
+              delete lsHistory[cellId];
+            }
+          }
+        }
+      }
+    };
+
+    this.updateDialogWindow = function () {
+      var
+        cellId,
+        html, el,
+        threshold,
+        lsHistory = localStorage.getItem('ewsSCHistory');
+
+      if (lsHistory && lsHistory !== '{}') {
+        lsHistory = JSON.parse(lsHistory);
+        html = '<table><tr><th># of SCs</th><th>Cell Name</th><th>Cell ID</th><th>Timestamp</th></tr>';
+        for (cellId in lsHistory) {
+          if (lsHistory.hasOwnProperty(cellId)) {
+            el = lsHistory[cellId];
+            if (el.count > 100) {
+              threshold = ' class="SCHistory-100"';
+            }
+            else if (el.count > 50) {
+              threshold = ' class="SCHistory-50"';
+            }
+            else {
+              threshold = '';
+            }
+            html += '<tr><td' + threshold + '>' + el.count + '</td><td class="sc-history-cell-name">' + el.name + '</td><td class="sc-history-cell-id">' + cellId + '</td><td>' + (new Date(el.ts)).toLocaleString() + '</td></tr>';
+          }
+        }
+        html += '</table>';
+      }
+      else {
+        html = 'no cubes SCed for last 7 days or since installing the script';
+      }
+
+      Utils.gid('ewsSCHistoryWrapper').innerHTML = html;
+    };
+  }
+  // end: SCi HISTORY
+
+
   function addMenuItem() {
     var
       li, a, list;
@@ -1008,7 +1147,7 @@
     list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
   }
 
-  Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=2');
+  Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=3');
   Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 
   addMenuItem();
@@ -1016,11 +1155,14 @@
 
   var panel = new StatsPanel();
   var chart = new AccuChart();
+  var history = new SCHistory();
 
   panel.createMap();
   panel.createChart('points');
 
   chart.generateAccuracyWidgetHTML();
+
+  history.removeOldEntries();
 
 
   var originalSaveTask = tomni.taskManager.saveTask;
@@ -1117,7 +1259,7 @@
     var
       cubeId = chart.cubeData.cubeId,
       cellId = chart.cubeData.cellId,
-      intv;
+      intv, action;
 
     intv = setInterval(function () {
       if (!data || data.status !== 'finished') {
@@ -1132,12 +1274,15 @@
 
       if (data.special === 'scythed') {
         val = 'RP';
+        action = 'RP';
       }
       else if (data.trailblazer) {
         val = 'TB';
+        action = 'TB';
       }
       else {
         val = accuracy;
+        action = 'PL';
       }
 
       clearInterval(intv);
@@ -1155,10 +1300,10 @@
         chart.updateAccuracyWeight(weight);
         barId = chart.wasRecentlyPlayed(cubeId);
         if (barId !== -1) {
-          chart.updatePlayedAccuracyBar(barId, val, weight, data.score, timestamp);
+          chart.updatePlayedAccuracyBar(action, barId, val, weight, data.score, timestamp);
         }
         else {
-          chart.addAccuracyBar(val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
+          chart.addAccuracyBar(action, val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
         }
       });
       chart.updateAccuracyValue(val);
@@ -1281,4 +1426,45 @@
     }
   });
   // end: EVENTS - ACCURACY CHART
+
+  // EVENTS - SC HISTORY
+  $(document)
+    .on('contextmenu', '#profileButton', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      history.updateDialogWindow();
+      $('#ewsSCHistory').dialog('open');
+    })
+    .on('votes-updated', function (event, data) {
+      var
+        _data = data,
+        host = window.location.hostname,
+        targetUrl = 'https://';
+
+      if (host.indexOf('beta') !== -1) {
+        targetUrl += 'beta.';
+      }
+      else if (host.indexOd('chris') !== -1) {
+        targetUrl += 'chris.';
+      }
+      targetUrl += 'eyewire.org/1.0/cell/' + data.cellId + '/tasks/complete/player';
+
+      $.getJSON(targetUrl, function (JSONData) {
+        var
+          uid = account.account.uid;
+
+        if (!JSONData) {
+          return;
+        }
+
+        history.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
+      });
+    });
+
+  $('#ewsSCHistoryWrapper').on('click', '.sc-history-cell-name', function () {
+    tomni.setCell({id: this.nextSibling.innerHTML});
+  });
+  // end: SC HISTORY
+
+
 })();
