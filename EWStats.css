@@ -476,6 +476,14 @@
     cursor: pointer;
 }
 
+#ewsSCHistoryWrapper td:nth-child(6) {
+    width: 150px;
+}
+
+#ewsSCHistoryWrapper button {
+    margin: 0 10px;
+}
+
 .SCHistory-50 {
     color: yellow;
 }
