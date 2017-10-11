@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.2.1
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -573,7 +573,7 @@
       return '<div ' +
         'class="accuracy-bar-2" id="accuracy-bar-2-' + ordinal + '" ' +
         // margin added to fix problem, when bars were "glued" to the top, when there weren't any 100% (44px) height bars
-        'style="background-color: ' + color + '; height: ' + height * 0.44 + 'px; margin-top: ' + (44 - height * 0.44) + 'px;" ' +
+        'style="background-color: ' + color + '; height: ' + height * 0.44 + 'px; margin-top: ' + (44 - height * 0.44) + 'px;" ' + 
         'data-accuracy=\''+ JSON.stringify(data) +
       '\'></div>';
     };
@@ -1015,7 +1015,7 @@
   // SC HISTORY
   function SCHistory() {
     $('body').append('<div id="ewsSCHistory"><div id="ewsSCHistoryWrapper"></div></div>');
-
+    
     $('#ewsSCHistory').dialog({
       autoOpen: false,
       hide: true,
@@ -1023,7 +1023,7 @@
       show: true,
       dialogClass: 'ews-dialog',
       title: 'Cubes completed in cells SCed during last 7 days',
-      width: 600,
+      width: 650,
       open: function (event, ui) {
         $('.ui-widget-overlay').click(function() { // close by clicking outside the window
           $('#ewsSCHistory').dialog('close');
@@ -1059,12 +1059,12 @@
     }
 
     addJS_Node(stringFunc);
-
-
+    
+    
     this.updateCount = function (count, cellId, cellName, timestamp) {
       var
         lsHistory = localStorage.getItem('ewsSCHistory');
-
+      
       if (lsHistory && lsHistory !== '{}') {
         lsHistory = JSON.parse(lsHistory);
       }
@@ -1073,17 +1073,17 @@
       }
 
       lsHistory[cellId] = {count: count, ts: timestamp, name: cellName};
-
+      
       localStorage.setItem('ewsSCHistory', JSON.stringify(lsHistory));
     };
-
+    
     this.removeOldEntries = function () {
       var
         cellId,
         now = Date.now(),
         sevenDays = 1000 * 60 * 60 * 24 * 7,
         lsHistory = localStorage.getItem('ewsSCHistory');
-
+      
       if (lsHistory && lsHistory !== '{}') {
         lsHistory = JSON.parse(lsHistory);
         for (cellId in lsHistory) {
@@ -1095,17 +1095,17 @@
         }
       }
     };
-
+    
     this.updateDialogWindow = function () {
       var
         cellId,
         html, el,
         threshold,
         lsHistory = localStorage.getItem('ewsSCHistory');
-
+      
       if (lsHistory && lsHistory !== '{}') {
         lsHistory = JSON.parse(lsHistory);
-        html = '<table><tr><th># of SCs</th><th>Cell Name</th><th>Cell ID</th><th>Timestamp</th></tr>';
+        html = '<table><tr><th># of SCs</th><th>Cell Name</th><th>Cell ID</th><th>Timestamp</th><th>sc-info</th><th>sc-info Results<th></tr>';
         for (cellId in lsHistory) {
           if (lsHistory.hasOwnProperty(cellId)) {
             el = lsHistory[cellId];
@@ -1118,7 +1118,7 @@
             else {
               threshold = '';
             }
-            html += '<tr><td' + threshold + '>' + el.count + '</td><td class="sc-history-cell-name">' + el.name + '</td><td class="sc-history-cell-id">' + cellId + '</td><td>' + (new Date(el.ts)).toLocaleString() + '</td></tr>';
+            html += '<tr><td' + threshold + '>' + el.count + '</td><td class="sc-history-cell-name">' + el.name + '</td><td class="sc-history-cell-id">' + cellId + '</td><td>' + (new Date(el.ts)).toLocaleString() + '</td><td><button class="sc-history-check-button minimalButton">Check</button><td class="sc-history-results"></td></tr>';
           }
         }
         html += '</table>';
@@ -1126,7 +1126,7 @@
       else {
         html = 'no cubes SCed for last 7 days or since installing the script';
       }
-
+      
       Utils.gid('ewsSCHistoryWrapper').innerHTML = html;
     };
   }
@@ -1161,7 +1161,7 @@
   panel.createChart('points');
 
   chart.generateAccuracyWidgetHTML();
-
+  
   history.removeOldEntries();
 
 
@@ -1426,7 +1426,7 @@
     }
   });
   // end: EVENTS - ACCURACY CHART
-
+  
   // EVENTS - SC HISTORY
   $(document)
     .on('contextmenu', '#profileButton', function (e) {
@@ -1440,7 +1440,7 @@
         _data = data,
         host = window.location.hostname,
         targetUrl = 'https://';
-
+      
       if (host.indexOf('beta') !== -1) {
         targetUrl += 'beta.';
       }
@@ -1458,18 +1458,77 @@
         }
 
         history.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
-
+        
         var btn = $('.showmeme button');
-
+        
         if (btn.hasClass('on2')) {
           btn.click().click().click();
         }
       });
     });
 
-  $('#ewsSCHistoryWrapper').on('click', '.sc-history-cell-name', function () {
-    tomni.setCell({id: this.nextSibling.innerHTML});
-  });
+  $('#ewsSCHistoryWrapper')
+    .on('click', '.sc-history-cell-name', function () {
+      tomni.setCell({id: this.nextSibling.innerHTML});
+    })
+    .on('click', '.sc-history-check-button', function () {
+      var
+        _this = this,
+        cellId = this.parentNode.previousSibling.previousSibling.innerHTML;
+        
+        var cleanTasks = function(potentialTasks, taskArray) {
+                for(var i = 0; i < taskArray.length; i++) {
+                    var index = potentialTasks.indexOf(taskArray[i]);
+
+                    if(index >= 0) {
+                        potentialTasks.splice(index, 1);
+                    }
+                }
+
+                return potentialTasks;
+            };
+
+      // source: crazyman's script
+      $.get("/1.0/cell/" + cellId + "/tasks").done(function(tasks) {
+        var potentialTasks = tasks.tasks.map(function(elem) {return elem.id;});
+        $.get("/1.0/cell/" + cellId + "/heatmap/scythe").done(function(scytheData) {
+            var frozen = scytheData.frozen || [];
+            var complete = scytheData.complete || [];
+
+            for(var i = 0; i < complete.length; i++) {
+                var cur = complete[i];
+                if(cur.votes < 2) continue;
+
+                var index = potentialTasks.indexOf(complete[i].id);
+
+                if(index >= 0) {
+                    potentialTasks.splice(index, 1);
+                }
+            }
+
+            cleanTasks(potentialTasks, frozen);
+
+            $.get("/1.0/cell/" + cellId + "/tasks/complete/player").done(function(completeData) {
+                completeData = JSON.parse(completeData);
+                var myTasks = completeData.scythe[account.account.uid.toString()] || [];
+
+                cleanTasks(potentialTasks, myTasks);
+
+                $.get("/1.0/cell/" + cellId + "/heatmap/low-weight?weight=3").done(function(data) {
+                    if(data["0"]) cleanTasks(potentialTasks, data["0"].map(function(elem) {return elem.task_id;}));
+                    if(data["1"]) cleanTasks(potentialTasks, data["1"].map(function(elem) {return elem.task_id;}));
+                    if(data["2"]) cleanTasks(potentialTasks, data["2"].map(function(elem) {return elem.task_id;}));
+
+                    _this.parentNode.nextSibling.innerHTML = "Cubes you can SC: " + potentialTasks.length;
+
+                });
+            });
+        });
+    });
+    
+    
+      
+    });
   // end: SC HISTORY
 
 
