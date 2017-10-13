@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.2.1
+// @version      1.2.2
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1023,7 +1023,7 @@
       show: true,
       dialogClass: 'ews-dialog',
       title: 'Cubes completed in cells SCed during last 7 days',
-      width: 650,
+      width: 800,
       open: function (event, ui) {
         $('.ui-widget-overlay').click(function() { // close by clicking outside the window
           $('#ewsSCHistory').dialog('close');
@@ -1130,7 +1130,90 @@
       Utils.gid('ewsSCHistoryWrapper').innerHTML = html;
     };
   }
-  // end: SCi HISTORY
+  // end: SC HISTORY
+  
+  // SETTINGS
+  var EwsSettings = function () {
+    var intv;
+    var _this = this;
+    var settings = {
+      'ews-auto-refresh-showmeme': false
+    };
+    var settingsName = 'ews-settings';
+
+    var stored = localStorage.getItem(settingsName);
+    if(stored) {
+      $.extend(settings, JSON.parse(stored));
+    }
+    intv = setInterval(function () {
+      if (!account.account.uid) {
+        return;
+      }
+      clearInterval(intv);
+      if (account.roles.scythe || account.roles.mystic) {
+        $('#settingsMenu').append(`
+          <div class="settings-group ews-settings-group invisible">
+            <h1>Stats Settings</h1>
+            <div class="setting">
+              <span>Auto Refresh ShowMeMe</span>
+              <input type="checkbox" id="ews-auto-refresh-showmeme" style="display: none;">
+            </div>
+          </div>`
+        );
+      }
+      
+      
+    // EVENTS - SETTINGS
+    // source: crazyman's script
+      $('#settingsMenu .ews-settings-group input').checkbox().each(function() {
+        var elem = $(this);
+        var input = elem.find('input');
+        var pref = input.prop('id');
+
+        $(document).trigger('ews-setting-changed', {setting: pref, state: settings[pref]});
+
+        if(settings[pref]) {
+          elem.removeClass('off').addClass('on');
+        }
+        else {
+          elem.removeClass('on').addClass('off');
+        }
+      });
+
+      $('#settingsMenu .ews-settings-group input').change(function(e) {
+        e.stopPropagation();
+        _this.set(this.id, this.checked);
+        $(document).trigger('ews-setting-changed', {setting: this.id, state: this.checked});
+        //showOrHideButton(this.id, this.checked);
+      });
+
+      $('#settingsMenu .ews-settings-group .checkbox').click(function(e) {
+        var elem = $(this).find('input');
+        elem.prop('checked', !elem.is(':checked'));
+        elem.change();
+      });
+
+      $('#settingsMenu .ews-settings-group input').closest('div.setting').click(function(e) {
+        e.stopPropagation();
+        var elem = $(this).find('input');
+        elem.prop('checked', !elem.is(':checked'));
+        elem.change();
+      });
+
+    // end: EVENTS - SETTINGS  
+    }, 100);
+  
+
+    this.set = function(setting, value) {
+      settings[setting] = value;
+      localStorage.setItem(settingsName, JSON.stringify(settings));
+    };
+
+    this.get = function(setting) {
+      return settings[setting];
+    };
+  };
+  // end: SETTINGS
 
 
   function addMenuItem() {
@@ -1153,6 +1236,7 @@
   addMenuItem();
   $('body').append(GM_getResourceText('base_html'));
 
+  var settings = new EwsSettings();
   var panel = new StatsPanel();
   var chart = new AccuChart();
   var history = new SCHistory();
@@ -1164,12 +1248,13 @@
   
   history.removeOldEntries();
 
-
+  
   var originalSaveTask = tomni.taskManager.saveTask;
   tomni.taskManager.saveTask = function() {
     chart.getCubeData(arguments);
     originalSaveTask.apply(this, arguments);
   };
+
 
 
   // source: https://stackoverflow.com/a/14488776
@@ -1434,6 +1519,7 @@
       e.stopPropagation();
       history.updateDialogWindow();
       $('#ewsSCHistory').dialog('open');
+      Utils.gid('ewsSCHistory').style.maxHeight = window.innerHeight - 100 + 'px';
     })
     .on('votes-updated', function (event, data) {
       var
@@ -1460,9 +1546,22 @@
         history.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
         
         var btn = $('.showmeme button');
-        
-        if (btn.hasClass('on2')) {
-          btn.click().click().click();
+
+        if (!btn.hasClass('on1') && settings.get('ews-auto-refresh-showmeme')) {
+          if (btn.hasClass('on2')) {
+            btn.click().click().click();
+          }
+          else {
+            btn.click();
+
+            setTimeout(function () {
+              btn.click();
+              setTimeout(function () {
+                btn.click();
+              }, 500)
+            }, 500);
+          }
+          
         }
       });
     });
@@ -1474,62 +1573,92 @@
     .on('click', '.sc-history-check-button', function () {
       var
         _this = this,
+        semaphore = 3,
+        tasks, scytheData, completeData, myTasks,
         cellId = this.parentNode.previousSibling.previousSibling.innerHTML;
         
-        var cleanTasks = function(potentialTasks, taskArray) {
-                for(var i = 0; i < taskArray.length; i++) {
-                    var index = potentialTasks.indexOf(taskArray[i]);
+        function cleanTasks(potentialTasks, taskArray) {
+          var
+            i, len,
+            index;
 
-                    if(index >= 0) {
-                        potentialTasks.splice(index, 1);
-                    }
-                }
+          for(i = 0, len = taskArray.length; i < len; i++) {
+            index = potentialTasks.indexOf(taskArray[i]);
 
-                return potentialTasks;
-            };
+            if(index >= 0) {
+              potentialTasks.splice(index, 1);
+            }
+          }
 
-      // source: crazyman's script
-      $.get("/1.0/cell/" + cellId + "/tasks").done(function(tasks) {
-        var potentialTasks = tasks.tasks.map(function(elem) {return elem.id;});
-        $.get("/1.0/cell/" + cellId + "/heatmap/scythe").done(function(scytheData) {
-            var frozen = scytheData.frozen || [];
-            var complete = scytheData.complete || [];
+          return potentialTasks;
+        }
+            
+      function runWhenDone() {
+        var
+          i, len, cur, index,
+          potentialTasks,
+          frozen, complete;
 
-            for(var i = 0; i < complete.length; i++) {
-                var cur = complete[i];
-                if(cur.votes < 2) continue;
+        if (--semaphore) {
+          return;
+        }
+        
+        potentialTasks = tasks.tasks.map(function(elem)  {return elem.id; });
+        
+        frozen = scytheData.frozen || [];
+        complete = scytheData.complete || [];
 
-                var index = potentialTasks.indexOf(complete[i].id);
-
-                if(index >= 0) {
-                    potentialTasks.splice(index, 1);
-                }
+        for(i = 0, len = complete.length; i < len; i++) {
+            cur = complete[i];
+            if(cur.votes < 2) {
+              continue;
             }
 
-            cleanTasks(potentialTasks, frozen);
+            index = potentialTasks.indexOf(complete[i].id);
 
-            $.get("/1.0/cell/" + cellId + "/tasks/complete/player").done(function(completeData) {
-                completeData = JSON.parse(completeData);
-                var myTasks = completeData.scythe[account.account.uid.toString()] || [];
+            if(index >= 0) {
+                potentialTasks.splice(index, 1);
+            }
+        }
 
-                cleanTasks(potentialTasks, myTasks);
+        cleanTasks(potentialTasks, frozen);
 
-                $.get("/1.0/cell/" + cellId + "/heatmap/low-weight?weight=3").done(function(data) {
-                    if(data["0"]) cleanTasks(potentialTasks, data["0"].map(function(elem) {return elem.task_id;}));
-                    if(data["1"]) cleanTasks(potentialTasks, data["1"].map(function(elem) {return elem.task_id;}));
-                    if(data["2"]) cleanTasks(potentialTasks, data["2"].map(function(elem) {return elem.task_id;}));
+        completeData = JSON.parse(completeData);
+        myTasks = completeData.scythe[account.account.uid.toString()] || [];
 
-                    _this.parentNode.nextSibling.innerHTML = "Cubes you can SC: " + potentialTasks.length;
+        cleanTasks(potentialTasks, myTasks);
 
-                });
-            });
+        $.get("/1.0/cell/" + cellId + "/heatmap/low-weight?weight=3").done(function(data) {
+            if(data["0"]) {
+              cleanTasks(potentialTasks, data["0"].map(function(elem) { return elem.task_id; }));
+            }
+            if(data["1"]) {
+              cleanTasks(potentialTasks, data["1"].map(function(elem) { return elem.task_id; }));
+            }
+            if(data["2"]) {
+              cleanTasks(potentialTasks, data["2"].map(function(elem) { return elem.task_id; }));
+            }
+
+            _this.parentNode.nextSibling.innerHTML = "Cubes you can SC: " + potentialTasks.length;
+
         });
-    });
-    
-    
-      
+      }
+
+      // source: crazyman's script
+      $.get("/1.0/cell/" + cellId + "/tasks").done(function(_tasks) {
+        tasks = _tasks;
+        runWhenDone();
+      });
+
+      $.get("/1.0/cell/" + cellId + "/heatmap/scythe").done(function(_scytheData) {
+        scytheData = _scytheData;
+        runWhenDone();
+      });
+
+      $.get("/1.0/cell/" + cellId + "/tasks/complete/player").done(function(_completeData) {
+        completeData = _completeData;
+        runWhenDone();
+      });
     });
   // end: SC HISTORY
-
-
 })();
