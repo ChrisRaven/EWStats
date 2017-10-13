@@ -476,6 +476,10 @@
     padding-right: 10px;
 }
 
+#ewsSCHistoryWrapper tr:hover {
+    background-color: #333;
+}
+
 #ewsSCHistoryWrapper tr td:nth-child(2) { /* cell name */
     padding-right: 15px;
     cursor: pointer;
