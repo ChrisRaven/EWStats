@@ -466,6 +466,11 @@
     background-color: #0000FF !important;
 }
 
+#ewsSCHistory {
+    overflow-y: auto;
+    max-height: 800px;
+}
+
 #ewsSCHistoryWrapper th {
     text-align: left;
     padding-right: 10px;
