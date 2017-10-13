@@ -479,7 +479,7 @@
 #ewsSCHistoryWrapper tr td:nth-child(2) { /* cell name */
     padding-right: 15px;
     cursor: pointer;
-    min-width: 200px;
+    min-width: 210px;
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(4) { /* timestamp */
