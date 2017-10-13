@@ -476,16 +476,17 @@
     padding-right: 10px;
 }
 
-#ewsSCHistoryWrapper tr td:nth-child(2) {
+#ewsSCHistoryWrapper tr td:nth-child(2) { /* cell name */
     padding-right: 15px;
     cursor: pointer;
+    min-width: 200px;
 }
 
-#ewsSCHistoryWrapper tr td:nth-child(4) {
-    width: 140px;
+#ewsSCHistoryWrapper tr td:nth-child(4) { /* timestamp */
+    width: 170px;
 }
 
-#ewsSCHistoryWrapper tr td:nth-child(6) {
+#ewsSCHistoryWrapper tr td:nth-child(6) { /* sc-info results */
     width: 150px;
 }
 
