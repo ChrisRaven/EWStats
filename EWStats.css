@@ -505,3 +505,8 @@
 .SCHistory-100 {
     color: #00FF00;
 }
+
+.custom-highlight button {
+    color: #00CC00;
+    border-color: #00CC00;
+}
