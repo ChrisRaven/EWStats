@@ -510,3 +510,8 @@
     color: #e4e1e1;
     border-color: #434343;
 }
+
+.custom-unhighlight button {
+    color: ##FFA500;
+    border-color ##FFA500;
+}
