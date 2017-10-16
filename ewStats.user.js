@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.3a
+// @version      1.3a1
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1153,13 +1153,13 @@
     if(stored) {
       $.extend(settings, JSON.parse(stored));
     }
-
+    
     $('#settingsMenu').append(`
       <div id="ews-settings-group" class="settings-group ews-settings-group invisible">
         <h1>Stats Settings</h1>
       </div>
     `);
-
+    
     function add(name, id) {
       $('#ews-settings-group').append(`
         <div class="setting">
@@ -1168,7 +1168,7 @@
         </div>
       `);
     }
-
+    
     if (account.roles.scout) {
       add('Custom Highlight (beta)', 'ews-custom-highlight');
     }
@@ -1185,7 +1185,7 @@
     this.get = function(setting) {
       return settings[setting];
     };
-
+    
     this.getAll = function () {
       return settings;
     };
@@ -1265,6 +1265,51 @@
       updateLocalStorage();
       this.highlight(currentCellId, this.data[cellId]);
       tomni.getCurrentCell().update();
+    };
+
+
+    this.addRelatives = function (direction) {
+      var
+        _this = this,
+        dataToUse,
+        cubeId = this.getCurrentCubeId(),
+        cellId = this.getCurrentCellId();
+
+      $.getJSON('/1.0/task/' + cubeId + '/hierarchy', function (data) {
+        dataToUse = direction.parents ? data.ancestors : data.descendants;
+        if (!_this.data.hasOwnProperty(cellId)) {
+          _this.data[cellId] = dataToUse;
+        }
+        else {
+          // source: https://stackoverflow.com/a/38940354
+          _this.data[cellId] = [...new Set([...(_this.data[cellId]), ...dataToUse])];
+        }
+        
+        updateLocalStorage();
+        _this.highlight(currentCellId, _this.data[cellId]);
+        tomni.getCurrentCell().update();
+      });
+    };
+
+
+    this.removeRelatives = function (direction) {
+      var
+        _this = this,
+        dataToUse,
+        cubeId = this.getCurrentCubeId(),
+        cellId = this.getCurrentCellId();
+
+      $.getJSON('/1.0/task/' + cubeId + '/hierarchy', function (data) {
+        dataToUse = direction.parents ? data.ancestors : data.descendants;
+        if (_this.data.hasOwnProperty(cellId)) {
+          // source: https://stackoverflow.com/a/33034768
+          _this.data[cellId] = _this.data[cellId].filter(x => dataToUse.indexOf(x) == -1);
+        }
+        
+        updateLocalStorage();
+        _this.highlight(currentCellId, _this.data[cellId]);
+        tomni.getCurrentCell().update();
+      });
     };
 
 
@@ -1883,26 +1928,26 @@
       });
 
       $(document).on('click', '.custom-highlight .down-arrow', function () {
-        if ($('.custom-hightlight button').hasClass('active')) {
-          highlight.add({children: true});
+        if ($('.custom-highlight button').hasClass('active')) {
+          highlight.addRelatives({children: true});
         }
       });
 
       $(document).on('click', '.custom-unhighlight .down-arrow', function () {
-        if ($('.custom-unhightlight button').hasClass('active')) {
-          highlight.remove({children: true});
+        if ($('.custom-unhighlight button').hasClass('active')) {
+          highlight.removeRelatives({children: true});
         }
       });
 
       $(document).on('click', '.custom-highlight .up-arrow', function () {
-        if ($('.custom-hightlight button').hasClass('active')) {
-          highlight.add({parents: true});
+        if ($('.custom-highlight button').hasClass('active')) {
+          highlight.addRelatives({parents: true});
         }
       });
 
       $(document).on('click', '.custom-unhighlight .up-arrow', function () {
-        if ($('.custom-unhightlight button').hasClass('active')) {
-          highlight.remove({parents: true});
+        if ($('.custom-unhighlight button').hasClass('active')) {
+          highlight.removeRelatives({parents: true});
         }
       });
     }
