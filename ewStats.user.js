@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.3a1
+// @version      1.3a2
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1228,6 +1228,14 @@
       </div>
     `);
 
+    this.highlight = function (cellId, cubeIds) {
+      tomni.threeD.getCell(cellId).highlight({cubeids: cubeIds, color: '#00CC00', zindex: 7});
+    };
+
+    this.unhighlight = function (cellId, cubeIds) {
+      tomni.threeD.getCell(cellId).unhighlight(cubeIds);
+    };
+
     this.highlightCell = function () {
       var
         cellId = this.getCurrentCellId();
@@ -1292,27 +1300,6 @@
     };
 
 
-    this.removeRelatives = function (direction) {
-      var
-        _this = this,
-        dataToUse,
-        cubeId = this.getCurrentCubeId(),
-        cellId = this.getCurrentCellId();
-
-      $.getJSON('/1.0/task/' + cubeId + '/hierarchy', function (data) {
-        dataToUse = direction.parents ? data.ancestors : data.descendants;
-        if (_this.data.hasOwnProperty(cellId)) {
-          // source: https://stackoverflow.com/a/33034768
-          _this.data[cellId] = _this.data[cellId].filter(x => dataToUse.indexOf(x) == -1);
-        }
-        
-        updateLocalStorage();
-        _this.highlight(currentCellId, _this.data[cellId]);
-        tomni.getCurrentCell().update();
-      });
-    };
-
-
     this.remove = function () {
       var
         index, cell,
@@ -1336,12 +1323,33 @@
       tomni.getCurrentCell().update();
     };
 
-    this.highlight = function (cellId, cubeIds) {
-      tomni.threeD.getCell(cellId).highlight({cubeids: cubeIds, color: '#00CC00', zindex: 7});
+
+    this.removeRelatives = function (direction) {
+      var
+        _this = this,
+        dataToUse,
+        cubeId = this.getCurrentCubeId(),
+        cellId = this.getCurrentCellId();
+
+      $.getJSON('/1.0/task/' + cubeId + '/hierarchy', function (data) {
+        dataToUse = direction.parents ? data.ancestors : data.descendants;
+        if (_this.data.hasOwnProperty(cellId)) {
+          // source: https://stackoverflow.com/a/33034768
+          _this.data[cellId] = _this.data[cellId].filter(x => dataToUse.indexOf(x) == -1);
+        }
+        
+        updateLocalStorage();
+        _this.highlight(currentCellId, _this.data[cellId]);
+        tomni.getCurrentCell().update();
+      });
     };
 
-    this.unhighlight = function (cellId, cubeIds) {
-      tomni.threeD.getCell(cellId).unhighlight(cubeIds);
+    this.refresh = function () {
+      var
+        cellId = this.getCurrentCellId();
+
+      this.highlight(cellId, this.data[cellId]);
+      tomni.getCurrentCell().update();
     };
   }
   // end: CUSTOM HIGHLIGHT
@@ -1871,11 +1879,18 @@
           })
           .on('cell-info-ready', function (e, data) {
             $(document).trigger('cell-info-ready-triggered', data);
+          })
+          .on('cube-leave', function (e, data) {
+            $(document).trigger('cube-leave-triggered', data);
           });
       `);
 
-      $(document).on('cell-info-ready-triggered', function () {
+      $(document).on('cell-info-ready-triggered', function () {console.log('read')
         highlight.highlightCell();
+      });
+
+      $(document).on('cube-leave-triggered', function () {
+        highlight.refresh();
       });
 
       $(document).on('model-fetched-triggered', function () {
