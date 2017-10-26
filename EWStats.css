@@ -515,7 +515,7 @@
     color: ##FFA500;
     border-color ##FFA500;
 }
-
+/*
 #ews-custom-highlight-color .track {
     background-image: linear-gradient(90deg,#447fdb,#d26de2,#e23d88,#f4f493,#53ca9d,#447fdb);
 }
@@ -529,4 +529,10 @@
     transition: transform .1s, -webkit-transform .1s;
     position: relative;
     outline: none;
+}
+*/
+#ews-custom-highlight-color {
+    width: 40px;
+    height: 15px;
+    border: 1px solid white;
 }
