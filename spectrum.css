@@ -255,8 +255,8 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
 
 .sp-container {
     border-radius: 0;
-    background-color: #ECECEC;
-    border: solid 1px #f0c49B;
+    background-color: #1e1e1e; /* changed */
+    border: 1px solid hsla(0,5%,89%,.5); /* changed */
     padding: 0;
 }
 .sp-container, .sp-container button, .sp-container input, .sp-color, .sp-hue, .sp-clear {
@@ -290,7 +290,8 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
    width: 100%;
    background:transparent;
    border-radius: 3px;
-   color: #222;
+   color: hsla(0,5%,89%,.5); /* changed */
+   border: 1px solid hsla(0,5%,89%,.5); /* added */
 }
 .sp-input:focus  {
     border: 1px solid orange;
