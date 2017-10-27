@@ -290,7 +290,7 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
    width: 100%;
    background:transparent;
    border-radius: 3px;
-   color: hsla(0,5%,89%,.5); /* changed */
+   color: #e4e1e1; /* changed */
    border: 1px solid hsla(0,5%,89%,.5); /* added */
 }
 .sp-input:focus  {
@@ -309,7 +309,7 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
 }
 .sp-picker-container {
     width: 172px;
-    border-left: solid 1px #fff;
+    /*border-left: solid 1px #fff; - removed */
 }
 
 /* Palettes */
