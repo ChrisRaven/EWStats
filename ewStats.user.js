@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.4.1
+// @version      1.4.2
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -173,6 +173,7 @@
 // STATS PANEL
 function StatsPanel() {
   var
+    _this = this,
     panel = Utils.gid('ewsPanel'),
     chart,
     dataCurrentlyInUse,
@@ -271,9 +272,6 @@ function StatsPanel() {
   };
 
   this.createMap = function () {
-    var
-      _this = this;
-
     $('#ewsWorldMap').vectorMap({
       map: 'world_mill',
       series: {
@@ -604,7 +602,6 @@ function StatsPanel() {
 
   this.getData = function () {
     var
-      _this = this,
       url = 'https://eyewire.org/1.0/stats/top/players/by/';
 
     if (this.dataType === 'points' || this.dataType === 'people') {
@@ -659,8 +656,8 @@ function StatsPanel() {
       $('.ui-widget-overlay').click(function() { // close by clicking outside the window
         $('#ewsPanel').dialog('close');
       });
-      panel.map.updateSize();
-      panel.getData();
+      _this.map.updateSize();
+      _this.getData();
     }
   });
 
@@ -691,12 +688,12 @@ function StatsPanel() {
       .addClass('selected');
 
     if (data.dataType) {
-      panel.dataType = data.dataType;
+      _this.dataType = data.dataType;
     }
     else if (data.timeRange) {
-      panel.timeRange = data.timeRange;
+      _this.timeRange = data.timeRange;
     }
-    panel.getData();
+    _this.getData();
   });
 
 }
@@ -717,7 +714,8 @@ function AccuChart() {
 
   var
     accuData = new Array(60),
-    refreshData = false;
+    refreshData = false,
+    _this = this;
 
 
   this.cubeData = null;
@@ -937,7 +935,6 @@ function AccuChart() {
 
   this.refreshAccuDataFromServer = function () {
     var
-      _this = this,
       waiting = 2;
 
     document.getElementsByClassName('accu-refresh-progress-bar')[0].value = 100;
@@ -1197,8 +1194,8 @@ function AccuChart() {
   
   $(document).on('cube-submission-data', function (event, data) {
     var
-      cubeId = chart.cubeData.cubeId,
-      cellId = chart.cubeData.cellId,
+      cubeId = _this.cubeData.cubeId,
+      cellId = _this.cubeData.cellId,
       intv, action;
 
     intv = setInterval(function () {
@@ -1237,20 +1234,20 @@ function AccuChart() {
         }
 
         weight = Math.round(weight * 10) / 10;
-        chart.updateAccuracyWeight(weight);
-        barId = chart.wasRecentlyPlayed(cubeId);
+        _this.updateAccuracyWeight(weight);
+        barId = _this.wasRecentlyPlayed(cubeId);
         if (barId !== -1) {
-          chart.updatePlayedAccuracyBar(action, barId, val, weight, data.score, timestamp);
+          _this.updatePlayedAccuracyBar(action, barId, val, weight, data.score, timestamp);
         }
         else {
-          chart.addAccuracyBar(action, val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
+          _this.addAccuracyBar(action, val, weight, tomni.getCurrentCell().info.difficulty, data.score, cellId, cubeId, timestamp);
         }
       });
-      chart.updateAccuracyValue(val);
+      _this.updateAccuracyValue(val);
       }, 100);
   });
 
-  $('#accuracy-bars-wrapper-2')
+  $(document)
     .on('mouseenter', '.accuracy-bar-cover-2', function(event) {
       var
         html, action, val,
@@ -1317,8 +1314,8 @@ function AccuChart() {
     window.open(window.location.origin + "?tcJumpTaskId=" + data.cubeId);
   });
 
-  $('#accuracy-weight-stripe')
-    .on('mouseenter', function () {
+  $(document)
+    .on('mouseenter', '#accuracy-weight-stripe', function () {
       var
         html = '',
         lbl = Utils.gid('accu-floating-label');
@@ -1330,7 +1327,7 @@ function AccuChart() {
       lbl.style.top = this.getBoundingClientRect().bottom + 'px';
 
       function div(weight) {
-        return '<div class="accu-wt-lbl-cell" style="background-color: ' + chart.weightToColor(weight) + ';"></div>';
+        return '<div class="accu-wt-lbl-cell" style="background-color: ' + _this.weightToColor(weight) + ';"></div>';
       }
 
       html = '<table>';
@@ -1347,7 +1344,7 @@ function AccuChart() {
       Utils.gid('accu-floating-label').style.display = 'none';
     });
 
-  $('#more-less-button').click(function () {
+  $(document).on('click', '#more-less-button', function () {
     var
       panel = Utils.gid('accuracy-bars-wrapper-2');
 
@@ -1372,6 +1369,7 @@ function AccuChart() {
 // SC HISTORY
 function SCHistory() {
   var
+    _this = this,
     stringFunc;
 
   $('body').append('<div id="ewsSCHistory"><div id="ewsSCHistoryWrapper"></div></div>');
@@ -1482,7 +1480,7 @@ function SCHistory() {
     .on('contextmenu', '#profileButton', function (e) {
       e.preventDefault();
       e.stopPropagation();
-      history.updateDialogWindow();
+      _this.updateDialogWindow();
       $('#ewsSCHistory').dialog('open');
       Utils.gid('ewsSCHistory').style.maxHeight = window.innerHeight - 100 + 'px';
     })
@@ -1509,7 +1507,7 @@ function SCHistory() {
           return;
         }
 
-        history.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
+        _this.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
 
         if (!btn.hasClass('on1') && settings.get(account.account.uid + '-ews-auto-refresh-showmeme')) {
           if (btn.hasClass('on2')) {
@@ -1642,7 +1640,7 @@ var EwsSettings = function () {
   if(stored) {
     $.extend(settings, JSON.parse(stored));
   }
-  
+
   $('#settingsMenu').append(`
     <div id="ews-settings-group" class="settings-group ews-settings-group invisible">
       <h1>Stats Settings</h1>
@@ -1662,7 +1660,7 @@ var EwsSettings = function () {
     add('Custom Highlight (beta)', 'ews-custom-highlight');
 
     $('#ews-settings-group').append(`
-      <div id="ews-custom-highlight-color-label">
+      <div id="ews-custom-highlight-color-label" style="` + /*(settings['ews-custom-highlight'] ? 'block' : 'none') +*/ `">
         Highlight Color
         <div id="ews-custom-highlight-color"></div>
       </div>
@@ -1744,6 +1742,17 @@ var EwsSettings = function () {
     elem.prop('checked', !elem.is(':checked'));
     elem.change();
   });
+  /*
+  $(document).on('ews-setting-changed', function (evt, data) {
+    if (data.setting === 'ews-custom-highlight') {console.log(data)
+      if (data.state) {
+        $('#ews-custom-highlight-color-label').slideDown();
+      }
+      else {
+        $('#ews-custom-highlight-color-label').slideUp();
+      }
+    }
+  });*/
 };
 // end: SETTINGS
 
@@ -2096,7 +2105,20 @@ Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css');
 addMenuItem();
 $('body').append(GM_getResourceText('base_html'));
 
-//var settings = new EwsSettings();
+
+// source: https://stackoverflow.com/a/14488776
+$.widget('ui.dialog', $.extend({}, $.ui.dialog.prototype, {
+  _title: function(title) {
+    if (!this.options.title) {
+      title.html('&#160;');
+    }
+    else {
+      title.html(this.options.title);
+    }
+  }
+}));
+
+
 var panel = new StatsPanel();
 var chart = new AccuChart();
 
@@ -2139,19 +2161,6 @@ tomni.taskManager.saveTask = function() {
   originalSaveTask.apply(this, arguments);
 };
 
-
-
-// source: https://stackoverflow.com/a/14488776
-$.widget('ui.dialog', $.extend({}, $.ui.dialog.prototype, {
-  _title: function(title) {
-    if (!this.options.title) {
-      title.html('&#160;');
-    }
-    else {
-      title.html(this.options.title);
-    }
-  }
-}));
 
 
 // submit using Spacebar
