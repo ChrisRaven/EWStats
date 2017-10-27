@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.4.3
+// @version      1.4.4
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1509,7 +1509,7 @@ function SCHistory() {
 
         _this.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
 
-        if (!btn.hasClass('on1') && settings.get(account.account.uid + '-ews-auto-refresh-showmeme')) {
+        if (!btn.hasClass('on1') && settings.get('ews-auto-refresh-showmeme')) {
           if (btn.hasClass('on2')) {
             btn.click().click().click();
           }
