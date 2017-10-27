@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.4.1
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1869,17 +1869,17 @@ function CustomHighlight() {
       this.removeRelatives(direction, cubeId);
     }
     else {
-      db.get(cubeId, function (result) {
+      db.get(cellId, function (result) {
         if (result) {
           index = result.cubeIds.indexOf(cubeId);
           if (index > -1) {
             result.cubeIds.splice(index, 1);
             cubes = result.cubeIds;
-            db.put({cellId: cellId, cubeIds, cubes, timestamp: Date.now()});
+            db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()});
+            _this.highlight(cellId, cubes);
+            tomni.getCurrentCell().update();
           }
         }
-        _this.unhighlight(cellId, cubeId);
-        tomni.getCurrentCell().update();
       });
     }
   };
@@ -1899,10 +1899,9 @@ function CustomHighlight() {
         if (result) {
           // source: https://stackoverflow.com/a/33034768
           cubes = result.cubeIds.filter(x => dataToUse.indexOf(x) == -1);
-          db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()}, function () {
-            _this.highlight(cellId, cubes);
-            tomni.getCurrentCell().update();
-          });
+          db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()});
+          _this.highlight(cellId, cubes);
+          tomni.getCurrentCell().update();
         }
       });
     });
