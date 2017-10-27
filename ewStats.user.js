@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.4.2
+// @version      1.4.3
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -2168,7 +2168,7 @@ $('body').keydown(function (evt) {
   var
     btn;
 
-  if (evt.keyCode === 32 && tomni.gameMode && settings.get(account.account.uid + '-ews-submit-using-spacebar')) {
+  if (evt.keyCode === 32 && tomni.gameMode && settings.get('ews-submit-using-spacebar')) {
     if (!tomni.task.inspect) {
       btn = Utils.gid('actionGo');
     }
