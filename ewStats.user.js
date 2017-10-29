@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.4.4
+// @version      1.4.5
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -66,6 +66,21 @@
 
       targ = document.getElementsByTagName('head')[0] || document.body || document.documentElement;
       targ.appendChild(scriptNode);
+    },
+    
+    // localStorage
+    ls: {
+      get: function (key) {
+        return localStorage.getItem(account.account.uid + '-ews-' + key);
+      },
+
+      set: function (key, val) {
+        localStorage.setItem(account.account.uid + '-ews-' + key, val);
+      },
+
+      remove: function (key) {
+        localStorage.removeItem(account.account.uid + '-ews-' + key);
+      }
     }
   };
 
@@ -83,32 +98,38 @@
     // migration to localStorage variables associated with an account and variables' names cleaning
     var lsData = localStorage;
     if (lsData['ew-hide-buttons']) {
-      localStorage.setItem(account.account.uid + '-ews-hide-buttons', lsData['ew-hide-buttons']);
+      Utils.ls.set('hide-buttons', lsData['ew-hide-buttons']);
+      //localStorage.setItem(account.account.uid + '-ews-hide-buttons', lsData['ew-hide-buttons']);
       localStorage.removeItem('ew-hide-buttons');
     }
     
     if (lsData['ews-settings']) {
-      localStorage.setItem(account.account.uid + '-ews-settings', lsData['ews-settings']);
+      Utils.ls.set('settings', lsData['ews-settings']);
+      // localStorage.setItem(account.account.uid + '-ews-settings', lsData['ews-settings']);
       localStorage.removeItem('ews-settings');
     }
     
     if (lsData['ewsAccuData']) {
-      localStorage.setItem(account.account.uid + '-ews-accu-data', lsData['ewsAccuData']);
+      Utils.ls.set('accu-data', lsData['ewsAccuData']);
+      // localStorage.setItem(account.account.uid + '-ews-accu-data', lsData['ewsAccuData']);
       localStorage.removeItem('ewsAccuData');
     }
     
     if (lsData['ewsLastHighlighted']) {
-      localStorage.setItem(account.account.uid + '-ews-last-highlighted', lsData['ewsLastHighlighted']);
+      Utils.ls.set('last-highlighted', lsData['ewsLastHighlighted']);
+      // localStorage.setItem(account.account.uid + '-ews-last-highlighted', lsData['ewsLastHighlighted']);
       localStorage.removeItem('ewsLastHighlighted');
     }
     
     if (lsData['ewsSCHistory']) {
-      localStorage.setItem(account.account.uid + '-ews-sc-history', lsData['ewsSCHistory']);
+      Utils.ls.set('sc-history', lsData['ewsSCHistory']);
+      // localStorage.setItem(account.account.uid + '-ews-sc-history', lsData['ewsSCHistory']);
       localStorage.removeItem('ewsSCHistory');
     }
     
     if (lsData['overview-draggable']) {
-      localStorage.setItem(account.account.uid + '-ews-overview-draggable', lsData['overview-draggable']);
+      Utils.ls.set('overview-draggable', lsData['overview-draggable']);
+      // localStorage.setItem(account.account.uid + '-ews-overview-draggable', lsData['overview-draggable']);
       localStorage.removeItem('overview-draggable');
     }
     // end: migration
@@ -903,7 +924,8 @@ function AccuChart() {
     $('.accuracy-bar-cover-2-highlighted').removeClass('accuracy-bar-cover-2-highlighted');
     $('#accuracy-bar-2-' + id).prev().addClass('accuracy-bar-cover-2-highlighted');
 
-    localStorage.setItem(account.account.uid + '-ews-last-highlighted', id);
+    Utils.ls.set('last-highlighted', id);
+    // localStorage.setItem(account.account.uid + '-ews-last-highlighted', id);
   };
 
 
@@ -981,7 +1003,8 @@ function AccuChart() {
         }
       }
 
-      localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
+      Utils.ls.set('accu-data', JSON.stringify(accuData));
+      // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     });
 
     $.getJSON('https://eyewire.org//1.0/player/accuracyBreakdown/2', function (data) {
@@ -1018,7 +1041,8 @@ function AccuChart() {
         }
       }
 
-      localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
+      Utils.ls.set('accu-data', JSON.stringify(accuData));
+      // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     });
 
   };
@@ -1038,8 +1062,10 @@ function AccuChart() {
       i, len, html = '',
       contFlag = false,
       row,
-      values = localStorage.getItem(account.account.uid + '-ews-accu-data'),
-      lastHighlightedBar = localStorage.getItem(account.account.uid + '-ews-last-highlighted');
+      values = Utils.ls.get('accu-data'),
+      // values = localStorage.getItem(account.account.uid + '-ews-accu-data'),
+      lastHighlightedBar = Utils.ls.get('last-highlighted');
+      // lastHighlightedBar = localStorage.getItem(account.account.uid + '-ews-last-highlighted');
 
     $('body').append(
       '<div id="accuracy-container">' +
@@ -1136,7 +1162,8 @@ function AccuChart() {
 
     accuData.push({action: action, val: val, wt: wt, lvl: lvl, score: score, cellId: cellId, cubeId: cubeId, timestamp: timestamp});
     accuData.shift();
-    localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
+    Utils.ls.set('accu-data', JSON.stringify(accuData));
+    // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     this.updateAccuracyBars();
     this.highlightBar(59);
   };
@@ -1162,7 +1189,8 @@ function AccuChart() {
     }
 
     accuData[barId] = data;
-    localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
+    Utils.ls.set('accu-data', JSON.stringify(accuData));
+    // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     this.highlightBar(barId);
   };
 
@@ -1260,7 +1288,7 @@ function AccuChart() {
 
       lbl.style.display = 'block';
       lbl.style.width = '230px';
-      lbl.style.height = '160px';
+      lbl.style.height = '175px';
       lbl.style.left = this.getBoundingClientRect().left + 'px';
       lbl.style.top = this.getBoundingClientRect().bottom + 'px';
 
@@ -1282,11 +1310,12 @@ function AccuChart() {
       html = '<table>';
       html += '<tr><td>Action</td><td>' + action + '</td></tr>';
       html += '<tr><td>Accuracy</td><td>' + val + '</td></tr>';
-      html += '<tr><td>Weight</td><td>' + data.wt.toFixed(1) + '</td></tr>';
+      html += '<tr><td>Weight*</td><td>' + data.wt.toFixed(1) + '</td></tr>';
       html += '<tr><td>Score</td><td>' + data.score + '</td></tr>';
       html += '<tr><td>Cell ID</td><td>' + data.cellId + '</td></tr>';
       html += '<tr><td>Cube ID</td><td>' + data.cubeId + '</td></tr>';
       html += '<tr><td>Timestamp</td><td>' + data.timestamp + '</td></tr>';
+      html += '<tr><td colspan=2 class="ews-accu-popup-asterisk">* when submitted</td></tr>';
       html += '</table>';
       lbl.innerHTML = html;
   })
@@ -1407,7 +1436,8 @@ function SCHistory() {
 
   this.updateCount = function (count, cellId, cellName, timestamp) {
     var
-      lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
+      lsHistory = Utils.ls.get('sc-history');
+      // lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
@@ -1418,7 +1448,8 @@ function SCHistory() {
 
     lsHistory[cellId] = {count: count, ts: timestamp, name: cellName};
 
-    localStorage.setItem(account.account.uid + '-ews-sc-history', JSON.stringify(lsHistory));
+    Utils.ls.set('sc-history', JSON.stringify(lsHistory));
+    // localStorage.setItem(account.account.uid + '-ews-sc-history', JSON.stringify(lsHistory));
   };
 
   this.removeOldEntries = function () {
@@ -1426,7 +1457,8 @@ function SCHistory() {
       cellId,
       now = Date.now(),
       sevenDays = 1000 * 60 * 60 * 24 * 7,
-      lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
+      lsHistory = Utils.ls.get('sc-history');
+      // lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
@@ -1437,7 +1469,8 @@ function SCHistory() {
           }
         }
       }
-      localStorage.setItem(account.account.uid + '-ews-sc-history', JSON.stringify(lsHistory));
+      Utils.ls.set('sc-history', JSON.stringify(lsHistory));
+      // localStorage.setItem(account.account.uid + '-ews-sc-history', JSON.stringify(lsHistory));
     }
   };
 
@@ -1446,7 +1479,8 @@ function SCHistory() {
       cellId,
       html, el,
       threshold,
-      lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
+      lsHistory = Utils.ls.get('sc-history');
+      // lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
@@ -1636,11 +1670,18 @@ var EwsSettings = function () {
   };
   var settingsName = account.account.uid + '-ews-settings';
 
-  var stored = localStorage.getItem(settingsName);
+  var stored = Utils.ls.get('settings');
+  // var stored = localStorage.getItem(settingsName);
   if(stored) {
     $.extend(settings, JSON.parse(stored));
   }
 
+  
+  this.get = function(setting) {
+    return settings[setting];
+  };
+  
+  
   $('#settingsMenu').append(`
     <div id="ews-settings-group" class="settings-group ews-settings-group invisible">
       <h1>Stats Settings</h1>
@@ -1651,108 +1692,105 @@ var EwsSettings = function () {
     $('#ews-settings-group').append(`
       <div class="setting">
         <span>` + name + `</span>
-        <input type="checkbox" id="` + id + `" style="display: none;">
+        <div class="checkbox">
+          <div class="checkbox-handle"></div>
+          <input type="checkbox" id="` + id + `" style="display: none;">
+        </div>
       </div>
     `);
   }
   
   if (account.roles.scout) {
-    add('Custom Highlight (beta)', 'ews-custom-highlight');
+    add('Custom Highlight', 'ews-custom-highlight');
 
     $('#ews-settings-group').append(`
-      <div id="ews-custom-highlight-color-label" style="` + /*(settings['ews-custom-highlight'] ? 'block' : 'none') +*/ `">
+      <div id="ews-custom-highlight-color-label" style="display: ` + (_this.get('ews-custom-highlight') ? 'block' : 'none') + `">
         Highlight Color
         <div id="ews-custom-highlight-color"></div>
       </div>
     `);
     
-    Utils.gid('ews-custom-highlight-color').style.backgroundColor = localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#000000';
+    Utils.gid('ews-custom-highlight-color').style.backgroundColor = Utils.ls.get('custom-highlight-color') || '#929292';
+    // Utils.gid('ews-custom-highlight-color').style.backgroundColor = localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292';
+    
+    function applyColor(color) {
+      var
+        clr = color.toHexString();
+
+      Utils.gid('ews-custom-highlight-color').style.backgroundColor = clr;
+      Utils.ls.set('custom-highlight-color', clr);
+      // localStorage.setItem(account.account.uid + '-ews-custom-highlight-color', clr);
+      
+      if (highlight) {
+        highlight.refresh();
+      }
+    }
 
     $('#ews-custom-highlight-color').spectrum({
       showInput: true,
       preferredFormat: 'hex',
-      showButtons: false,
-      color: localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292',
-      move: function(color) {
-        var
-          clr = color.toHexString();
-
-        Utils.gid('ews-custom-highlight-color').style.backgroundColor = clr;
-        localStorage.setItem(account.account.uid + '-ews-custom-highlight-color', clr);
-        
-        if (highlight) {
-          highlight.refresh();
-        }
-      }
+      //showButtons: false,
+      color: Utils.ls.get('custom-highlight-color') || '#929292',
+      // color: localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292',
+      move: applyColor,
+      change: applyColor
     });
+    
+    $('.sp-cancel, .sp-choose').addClass('minimalButton');
   }
 
   if (account.roles.scythe || account.roles.mystic) {
     add('Auto Refresh ShowMeMe', 'ews-auto-refresh-showmeme');
   }
-  
+
   add('Submit using Spacebar', 'ews-submit-using-spacebar');
 
   this.set = function(setting, value) {
     settings[setting] = value;
-    localStorage.setItem(settingsName, JSON.stringify(settings));
+    Utils.ls.set('settings', JSON.stringify(settings));
+    // localStorage.setItem(settingsName, JSON.stringify(settings));
   };
 
-  this.get = function(setting) {
-    return settings[setting];
-  };
-  
   this.getAll = function () {
     return settings;
   };
   
   
 // source: crazyman's script
-  $('#ews-settings-group input').checkbox().each(function() {
-    var elem = $(this);
-    var input = elem.find('input');
-    var pref = input.prop('id');
-    var sets = _this.getAll();
+  $('#ews-settings-group input').each(function() {
+    var
+      elem, pref, sets;
 
+    elem = $(this);
+    pref = this.id;
+    sets = _this.getAll();
+
+    this.checked = sets[pref];
+    elem.add(elem.closest('.checkbox')).removeClass(sets[pref] ? 'off' : 'on').addClass(sets[pref] ? 'on' : 'off');
     $(document).trigger('ews-setting-changed', {setting: pref, state: sets[pref]});
-
-    if(sets[pref]) {
-      elem.removeClass('off').addClass('on');
-    }
-    else {
-      elem.removeClass('on').addClass('off');
-    }
   });
 
-  $('#ews-settings-group input').change(function(e) {
-    e.stopPropagation();
-    _this.set(this.id, this.checked);
-    $(document).trigger('ews-setting-changed', {setting: this.id, state: this.checked});
+  $('#ews-settings-group input').closest('div.setting').click(function(evt) {
+    var
+      $elem, elem, newState;
+
+    $elem = $(this).find('input');
+    elem = $elem[0];
+    newState = !elem.checked;
+
+    evt.stopPropagation();
+
+    elem.checked = newState;
+    _this.set(elem.id, newState);
+    $elem.add($elem.closest('.checkbox')).removeClass(newState ? 'off' : 'on').addClass(newState ? 'on' : 'off');
+    $(document).trigger('ews-setting-changed', {setting: elem.id, state: newState});
   });
 
-  $('#ews-settings-group .checkbox').click(function(e) {
-    var elem = $(this).find('input');
-    elem.prop('checked', !elem.is(':checked'));
-    elem.change();
-  });
-
-  $('#ews-settings-group input').closest('div.setting').click(function(e) {
-    e.stopPropagation();
-    var elem = $(this).find('input');
-    elem.prop('checked', !elem.is(':checked'));
-    elem.change();
-  });
-  /*
   $(document).on('ews-setting-changed', function (evt, data) {
-    if (data.setting === 'ews-custom-highlight') {console.log(data)
-      if (data.state) {
-        $('#ews-custom-highlight-color-label').slideDown();
-      }
-      else {
-        $('#ews-custom-highlight-color-label').slideUp();
-      }
+    if (data.setting === 'ews-custom-highlight') {
+      $('#ews-custom-highlight-color-label')[data.state ? 'slideDown' : 'slideUp']();
     }
-  });*/
+  });
 };
 // end: SETTINGS
 
@@ -1784,18 +1822,32 @@ function CustomHighlight() {
     </div>
   `);
   
+  $('.custom-highlight, .custom-unhighlight').css('display', settings.get('ews-custom-highlight') ? 'block' : 'none');
+
   function getColor() {
-    return  localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292';
+    return  Utils.ls.get('custom-highlight-color') || '#929292';
+    // return  localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292';
   }
 
   this.highlight = function (cellId, cubeIds) {
-    tomni.threeD.getCell(cellId).highlight({cubeids: cubeIds, color: getColor(), zindex: 7});
+    // zindex = 1, because the higlights object is processed using .forEach(), where the order of the indices
+    // doesn't matter. Only order of adding items is importans. By default the object
+    // consists of objects with keys {1, 5, 6, 100}, so no matter, if I add 2, 10 or 1000, that
+    // object will always be procceded at the end overwriting settings from the previous objects
+    // Luckily, the {1} objects seems to ne unused, while it can be still used for the Custom Highlighting
+    // and the order in the highlights object won't change
+    tomni.threeD.getCell(cellId).highlight({cubeids: cubeIds, color: getColor(), zindex: 1});
+    tomni.getCurrentCell().update();
   };
-
+/*
+// tomni(...)unhighlight unhighlights whole layer(s), e.g. ...unhighlight([1, 5]);
+// to unhighlight a cube, just use highlight() with a list without the cube as argument
+// to unhighlight whole cell use an empty array as argument
   this.unhighlight = function (cellId, cubeIds) {
     tomni.threeD.getCell(cellId).unhighlight(cubeIds);
+    tomni.getCurrentCell().update();
   };
-
+*/
   this.highlightCell = function () {
     var
       cellId = this.getCurrentCellId();
@@ -1838,7 +1890,6 @@ function CustomHighlight() {
         }
         db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()}, function () {
           _this.highlight(cellId, cubes);
-          tomni.getCurrentCell().update();
         });
       });
     }
@@ -1861,7 +1912,6 @@ function CustomHighlight() {
         }
         db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()}, function () {
           _this.highlight(cellId, cubes);
-          tomni.getCurrentCell().update();
         });
       });
     });
@@ -1886,7 +1936,6 @@ function CustomHighlight() {
             cubes = result.cubeIds;
             db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()});
             _this.highlight(cellId, cubes);
-            tomni.getCurrentCell().update();
           }
         }
       });
@@ -1910,7 +1959,6 @@ function CustomHighlight() {
           cubes = result.cubeIds.filter(x => dataToUse.indexOf(x) == -1);
           db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()});
           _this.highlight(cellId, cubes);
-          tomni.getCurrentCell().update();
         }
       });
     });
@@ -1923,7 +1971,6 @@ function CustomHighlight() {
       db.get(cellId, function (result) {
         if (result) {
           _this.highlight(cellId, result.cubeIds);
-          tomni.getCurrentCell().update();
         }
       });
 
@@ -1950,11 +1997,15 @@ function CustomHighlight() {
   `);
 
   $(document).on('cell-info-ready-triggered', function () {
-    _this.highlightCell();
+    if (settings.get('ews-custom-highlight')) {
+      _this.highlightCell();
+    }
   });
 
   $(document).on('cube-leave-triggered', function () {
-    _this.refresh();
+    if (settings.get('ews-custom-highlight')) {
+      _this.refresh();
+    }
   });
 
   $(document).on('model-fetched-triggered', function () {
@@ -2027,9 +2078,10 @@ function CustomHighlight() {
   });
 
   $(document).on('hotkey-event-triggered', function (evt) {
-    if (tomni.gameMode) {
+    if (tomni.gameMode || !settings.get('ews-custom-highlight')) {
       return;
     }
+
 
     var prevkeys = Keycodes.lastKeys(1).join('');
 
@@ -2080,6 +2132,48 @@ function CustomHighlight() {
         _this.remove({parents: true});
       }
     });
+    
+  function recalculateFloatingControlPanelWidth() {
+    var
+      width, windowWidth, rootWidth,
+      root, controls, info,
+      rootLeft;
+
+    root = $('#cubeInspectorFloatingControls');
+    controls = $('#cubeInspectorFloatingControls .controls');
+    info = $('#cubeInspectorFloatingControls .info');
+
+    width = controls.outerWidth(true);
+    width += info.outerWidth(true);
+    width += root.outerWidth(false) - root.innerWidth();
+
+    root.css('width', width + 'px');
+    
+    windowWidth = $(window).width();
+    rootLeft = parseInt(root.css('left'), 10);
+    rootWidth = root.width();
+
+    if (rootLeft > windowWidth || rootLeft + rootWidth > windowWidth) {
+      root.css('left', (windowWidth - rootWidth) + 'px');
+    }
+  }
+
+  $(document).on('ews-setting-changed', function (evt, data) {
+    if (data.setting === 'ews-custom-highlight') {
+      if (data.state) {
+        db.get(tomni.cell, function (data) {
+          _this.highlight(tomni.cell, data.cubeIds);
+        });
+        $('.custom-highlight, .custom-unhighlight').css('display', 'block');
+        recalculateFloatingControlPanelWidth();
+      }
+      else {
+        _this.highlight(tomni.cell, []);
+        $('.custom-highlight, .custom-unhighlight').css('display', 'none');
+        recalculateFloatingControlPanelWidth();
+      }
+    }
+  });
 }
 // end: CUSTOM HIGHLIGHT
 
@@ -2100,7 +2194,7 @@ function addMenuItem() {
 
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=3');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=2');
 
 addMenuItem();
 $('body').append(GM_getResourceText('base_html'));
@@ -2131,7 +2225,7 @@ var
 settings = new EwsSettings();
 
 if (account.roles.scout) {
-  if (settings.get('ews-custom-highlight')) {
+  // if (settings.get('ews-custom-highlight')) { // always create the highlight object ofr Scouts and higher, to be able to switch the CH anytime
     db = new Database();
     highlight = new CustomHighlight();
     if (localStorage.getItem('ews-highlight-data')) { // migrating from localStorage to IndexedDB
@@ -2141,7 +2235,7 @@ if (account.roles.scout) {
       }
       localStorage.removeItem('ews-highlight-data');
     }
-  }
+  // }
 }
 
 if (account.roles.scythe || account.roles.mystic) {
@@ -2149,7 +2243,9 @@ if (account.roles.scythe || account.roles.mystic) {
   history.removeOldEntries();
 }
 
-panel.createMap();
+setTimeout(function () { // some weird race condition causing errors while try to zoom the map
+  panel.createMap();
+}, 0);
 panel.createChart('points');
 
 chart.generateAccuracyWidgetHTML();
