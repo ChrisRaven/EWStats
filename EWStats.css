@@ -485,7 +485,8 @@
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(1) { /* # of SCs */
-    width: 60px;
+    text-align: right;
+    width: 70px;
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(2) { /* cell name */
@@ -495,7 +496,7 @@
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(3) { /* Cell ID */
-    width: 50px;
+    width: 60px;
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(4) { /* timestamp */
@@ -568,7 +569,7 @@
 }
 
 #ewsCustomHighlightedCellsWrapper tr td:nth-child(3) {
-    width: 40px;
+    width: 60px;
 }
 
 #ewsCustomHighlightedCellsWrapper tr td:nth-child(4) {
