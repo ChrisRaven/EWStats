@@ -73,8 +73,12 @@
 }
 
 .ews-dialog button {
-    font-size: 12pt;
+    font-size: 10pt;
     padding: 2px 6px
+}
+
+.sc-history-remove-button {
+    color: #d93f3f;
 }
 
 .ews-dialog .ews-table {
