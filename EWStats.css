@@ -484,10 +484,18 @@
     background-color: #333;
 }
 
+#ewsSCHistoryWrapper tr td:nth-child(1) { /* # of SCs */
+    width: 60px;
+}
+
 #ewsSCHistoryWrapper tr td:nth-child(2) { /* cell name */
     padding-right: 15px;
     cursor: pointer;
     min-width: 210px;
+}
+
+#ewsSCHistoryWrapper tr td:nth-child(3) { /* Cell ID */
+    width: 50px;
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(4) { /* timestamp */
@@ -541,6 +549,11 @@
 #ewsCustomHighlightedCells {
     overflow-y: auto;
     max-height: 800px;
+}
+
+#ewsCustomHighlightedCellsWrapper th {
+    text-align: left;
+    padding-right: 10px;
 }
 
 #ewsCustomHighlightedCellsWrapper tr td:nth-child(1) {
