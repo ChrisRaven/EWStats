@@ -486,6 +486,7 @@
 
 #ewsSCHistoryWrapper tr td:nth-child(1) { /* # of SCs */
     text-align: right;
+    padding-right: 10px;
     width: 70px;
 }
 
@@ -496,6 +497,8 @@
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(3) { /* Cell ID */
+    text-align: right;
+    padding-right: 10px;
     width: 60px;
 }
 
