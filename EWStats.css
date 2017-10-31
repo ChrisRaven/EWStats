@@ -582,3 +582,7 @@
 #ewsCustomHighlightedCellsWrapper tr td:nth-child(4) {
     width: 170px;
 }
+
+ewsCustomHighlightedCellsWrapper button {
+    color: #d93f3f;
+}
