@@ -507,6 +507,7 @@
 }
 
 #ewsSCHistoryWrapper tr td:nth-child(6) { /* sc-info results */
+    text-align: right;
     width: 150px;
 }
 
