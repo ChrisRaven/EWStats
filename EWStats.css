@@ -589,13 +589,18 @@
 }
 
 #ews-sc-history-period-selection,
-#ews-sc-history-dataset-selection {
+#ews-sc-history-dataset-selection,
+#ews-custom-highlight-period-selection,
+#ews-custom-highlight-dataset-selection {
     display: inline-block;
     width: 50%;
 }
 
-#ews-sc-history-period-selection .ewsNavButton ,
-#ews-sc-history-dataset-selection .ewsNavButton {
+#ews-sc-history-period-selection .ewsNavButton,
+#ews-sc-history-dataset-selection .ewsNavButton,
+#ews-custom-highlight-period-selection .ewsNavButton,
+#ews-custom-highlight-dataset-selection .ewsNavButton {
     display: inline-block;
     width: auto;
+    float: left;
 }
