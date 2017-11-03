@@ -587,3 +587,15 @@
 #ewsCustomHighlightedCellsWrapper button {
     color: #d93f3f;
 }
+
+#ews-sc-history-period-selection,
+#ews-sc-history-dataset-selection {
+    display: inline-block;
+    width: 50%;
+}
+
+#ews-sc-history-period-selection .ewsNavButton ,
+#ews-sc-history-dataset-selection .ewsNavButton {
+    display: inline-block;
+    width: auto;
+}
