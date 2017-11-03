@@ -492,7 +492,8 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
 
     letter-spacing: .5px;
     font-weight: 400;
-    background-color: transparent !important;
+    background-color: transparent;
+    background-image: none;
     outline: none;
     box-shadow: none;
     transition: background-color .1s ease-in-out,border-color .1s ease-in-out,color .1s ease-in-out;
