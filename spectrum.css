@@ -253,36 +253,43 @@ Here are the basic themeable display options (colors, fonts, global widths).
 See http://bgrins.github.io/spectrum/themes/ for instructions.
 */
 
-.sp-container {
+#ews-custom-highlight-color .sp-container {
     border-radius: 0;
     background-color: #1e1e1e; /* changed */
     border: 1px solid hsla(0,5%,89%,.5); /* changed */
     padding: 0;
 }
-.sp-container, .sp-container button, .sp-container input, .sp-color, .sp-hue, .sp-clear {
+#ews-custom-highlight-color .sp-container,
+#ews-custom-highlight-color .sp-container button,
+#ews-custom-highlight-color .sp-container input,
+#ews-custom-highlight-color .sp-color,
+#ews-custom-highlight-color .sp-hue,
+#ews-custom-highlight-color .sp-clear {
     font: normal 12px "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif;
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
     -ms-box-sizing: border-box;
     box-sizing: border-box;
 }
-.sp-top {
+#ews-custom-highlight-color .sp-top {
     margin-bottom: 3px;
 }
-.sp-color, .sp-hue, .sp-clear {
+#ews-custom-highlight-color .sp-color,
+#ews-custom-highlight-color .sp-hue,
+#ews-custom-highlight-color .sp-clear {
     border: solid 1px #666;
 }
 
 /* Input */
-.sp-input-container {
+#ews-custom-highlight-color .sp-input-container {
     float:right;
     width: 100px;
     margin-bottom: 4px;
 }
-.sp-initial-disabled  .sp-input-container {
+#ews-custom-highlight-color .sp-initial-disabled  .sp-input-container {
     width: 100%;
 }
-.sp-input {
+#ews-custom-highlight-color .sp-input {
    font-size: 12px !important;
    border: 1px inset;
    padding: 4px 5px;
@@ -293,35 +300,36 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
    color: #e4e1e1; /* changed */
    border: 1px solid hsla(0,5%,89%,.5); /* added */
 }
-.sp-input:focus  {
+#ews-custom-highlight-color .sp-input:focus  {
     border: 1px solid orange;
 }
-.sp-input.sp-validation-error {
+#ews-custom-highlight-color .sp-input.sp-validation-error {
     border: 1px solid red;
     background: #fdd;
 }
-.sp-picker-container , .sp-palette-container {
+#ews-custom-highlight-color .sp-picker-container ,
+#ews-custom-highlight-color .sp-palette-container {
     float:left;
     position: relative;
     padding: 10px;
     padding-bottom: 300px;
     margin-bottom: -290px;
 }
-.sp-picker-container {
+#ews-custom-highlight-color .sp-picker-container {
     width: 172px;
     /*border-left: solid 1px #fff; - removed */
 }
 
 /* Palettes */
-.sp-palette-container {
+#ews-custom-highlight-color .sp-palette-container {
     border-right: solid 1px #ccc;
 }
 
-.sp-palette-only .sp-palette-container {
+#ews-custom-highlight-color .sp-palette-only .sp-palette-container {
     border: 0;
 }
 
-.sp-palette .sp-thumb-el {
+#ews-custom-highlight-color .sp-palette .sp-thumb-el {
     display: block;
     position:relative;
     float:left;
@@ -331,19 +339,20 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
     cursor: pointer;
     border:solid 2px transparent;
 }
-.sp-palette .sp-thumb-el:hover, .sp-palette .sp-thumb-el.sp-thumb-active {
+#ews-custom-highlight-color .sp-palette .sp-thumb-el:hover,
+#ews-custom-highlight-color .sp-palette .sp-thumb-el.sp-thumb-active {
     border-color: orange;
 }
-.sp-thumb-el {
+#ews-custom-highlight-color .sp-thumb-el {
     position:relative;
 }
 
 /* Initial */
-.sp-initial {
+#ews-custom-highlight-color .sp-initial {
     float: left;
     border: solid 1px #333;
 }
-.sp-initial span {
+#ews-custom-highlight-color .sp-initial span {
     width: 30px;
     height: 25px;
     border:none;
@@ -352,18 +361,18 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
     margin:0;
 }
 
-.sp-initial .sp-clear-display {
+#ews-custom-highlight-color .sp-initial .sp-clear-display {
     background-position: center;
 }
 
 /* Buttons */
-.sp-palette-button-container,
-.sp-button-container {
+#ews-custom-highlight-color .sp-palette-button-container,
+#ews-custom-highlight-color .sp-button-container {
     float: right;
 }
 
 /* Replacer (the little preview div that shows up instead of the <input>) */
-.sp-replacer {
+#ews-custom-highlight-color .sp-replacer {
     margin:0;
     overflow:hidden;
     cursor:pointer;
@@ -376,23 +385,24 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
     color: #333;
     vertical-align: middle;
 }
-.sp-replacer:hover, .sp-replacer.sp-active {
+#ews-custom-highlight-color .sp-replacer:hover,
+#ews-custom-highlight-color .sp-replacer.sp-active {
     border-color: #F0C49B;
     color: #111;
 }
-.sp-replacer.sp-disabled {
+#ews-custom-highlight-color .sp-replacer.sp-disabled {
     cursor:default;
     border-color: silver;
     color: silver;
 }
-.sp-dd {
+#ews-custom-highlight-color .sp-dd {
     padding: 2px 0;
     height: 16px;
     line-height: 16px;
     float:left;
     font-size:10px;
 }
-.sp-preview {
+#ews-custom-highlight-color .sp-preview {
     position:relative;
     width:25px;
     height: 20px;
@@ -402,29 +412,30 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
     z-index: 0;
 }
 
-.sp-palette {
+#ews-custom-highlight-color .sp-palette {
     *width: 220px;
     max-width: 220px;
 }
-.sp-palette .sp-thumb-el {
+
+#ews-custom-highlight-color .sp-palette .sp-thumb-el {
     width:16px;
     height: 16px;
     margin:2px 1px;
     border: solid 1px #d0d0d0;
 }
 
-.sp-container {
+#ews-custom-highlight-color .sp-container {
     padding-bottom:0;
 }
 
 
 /* Buttons: http://hellohappy.org/css3-buttons/ */
-.sp-container button {
+#ews-custom-highlight-color .sp-container button {
   text-align: center;
   vertical-align: middle;
 }
 
-.sp-cancel {
+#ews-custom-highlight-color .sp-cancel {
     color: #d93f3f !important;
     margin:0;
     vertical-align: middle;
@@ -432,34 +443,39 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
 
 }
 
-.sp-palette span:hover, .sp-palette span.sp-thumb-active {
+#ews-custom-highlight-color .sp-palette span:hover,
+#ews-custom-highlight-color .sp-palette span.sp-thumb-active {
     border-color: #000;
 }
 
-.sp-preview, .sp-alpha, .sp-thumb-el {
+#ews-custom-highlight-color .sp-preview,
+#ews-custom-highlight-color .sp-alpha,
+#ews-custom-highlight-color .sp-thumb-el {
     position:relative;
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAIAAADZF8uwAAAAGUlEQVQYV2M4gwH+YwCGIasIUwhT25BVBADtzYNYrHvv4gAAAABJRU5ErkJggg==);
 }
-.sp-preview-inner, .sp-alpha-inner, .sp-thumb-inner {
+#ews-custom-highlight-color .sp-preview-inner,
+#ews-custom-highlight-color .sp-alpha-inner,
+#ews-custom-highlight-color .sp-thumb-inner {
     display:block;
     position:absolute;
     top:0;left:0;bottom:0;right:0;
 }
 
-.sp-palette .sp-thumb-inner {
+#ews-custom-highlight-color .sp-palette .sp-thumb-inner {
     background-position: 50% 50%;
     background-repeat: no-repeat;
 }
 
-.sp-palette .sp-thumb-light.sp-thumb-active .sp-thumb-inner {
+#ews-custom-highlight-color .sp-palette .sp-thumb-light.sp-thumb-active .sp-thumb-inner {
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAIVJREFUeNpiYBhsgJFMffxAXABlN5JruT4Q3wfi/0DsT64h8UD8HmpIPCWG/KemIfOJCUB+Aoacx6EGBZyHBqI+WsDCwuQ9mhxeg2A210Ntfo8klk9sOMijaURm7yc1UP2RNCMbKE9ODK1HM6iegYLkfx8pligC9lCD7KmRof0ZhjQACDAAceovrtpVBRkAAAAASUVORK5CYII=);
 }
 
-.sp-palette .sp-thumb-dark.sp-thumb-active .sp-thumb-inner {
+#ews-custom-highlight-color .sp-palette .sp-thumb-dark.sp-thumb-active .sp-thumb-inner {
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABIAAAASCAYAAABWzo5XAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAAadEVYdFNvZnR3YXJlAFBhaW50Lk5FVCB2My41LjEwMPRyoQAAAMdJREFUOE+tkgsNwzAMRMugEAahEAahEAZhEAqlEAZhEAohEAYh81X2dIm8fKpEspLGvudPOsUYpxE2BIJCroJmEW9qJ+MKaBFhEMNabSy9oIcIPwrB+afvAUFoK4H0tMaQ3XtlrggDhOVVMuT4E5MMG0FBbCEYzjYT7OxLEvIHQLY2zWwQ3D+9luyOQTfKDiFD3iUIfPk8VqrKjgAiSfGFPecrg6HN6m/iBcwiDAo7WiBeawa+Kwh7tZoSCGLMqwlSAzVDhoK+6vH4G0P5wdkAAAAASUVORK5CYII=);
 }
 
-.sp-clear-display {
+#ews-custom-highlight-color .sp-clear-display {
     background-repeat:no-repeat;
     background-position: center;
     background-image: url(data:image/gif;base64,R0lGODlhFAAUAPcAAAAAAJmZmZ2dnZ6enqKioqOjo6SkpKWlpaampqenp6ioqKmpqaqqqqurq/Hx8fLy8vT09PX19ff39/j4+Pn5+fr6+vv7+wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAAP8ALAAAAAAUABQAAAihAP9FoPCvoMGDBy08+EdhQAIJCCMybCDAAYUEARBAlFiQQoMABQhKUJBxY0SPICEYHBnggEmDKAuoPMjS5cGYMxHW3IiT478JJA8M/CjTZ0GgLRekNGpwAsYABHIypcAgQMsITDtWJYBR6NSqMico9cqR6tKfY7GeBCuVwlipDNmefAtTrkSzB1RaIAoXodsABiZAEFB06gIBWC1mLVgBa0AAOw==);
