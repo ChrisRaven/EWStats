@@ -253,15 +253,15 @@ Here are the basic themeable display options (colors, fonts, global widths).
 See http://bgrins.github.io/spectrum/themes/ for instructions.
 */
 
-.ews-color-picker .sp-container {
+.ews-color-picker.sp-container {
     border-radius: 0;
     background-color: #1e1e1e; /* changed */
     border: 1px solid hsla(0,5%,89%,.5); /* changed */
     padding: 0;
 }
-.ews-color-picker .sp-container,
-.ews-color-picker .sp-container button,
-.ews-color-picker .sp-container input,
+.ews-color-picker.sp-container,
+.ews-color-picker.sp-container button,
+.ews-color-picker.sp-container input,
 .ews-color-picker .sp-color,
 .ews-color-picker .sp-hue,
 .ews-color-picker .sp-clear {
@@ -430,7 +430,7 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
 
 
 /* Buttons: http://hellohappy.org/css3-buttons/ */
-.ews-color-picker .sp-container button {
+.ews-color-picker.sp-container button {
   text-align: center;
   vertical-align: middle;
 }
