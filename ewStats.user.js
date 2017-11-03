@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.4.5
+// @version      1.5
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -53,7 +53,7 @@
     // Source: https://stackoverflow.com/a/6805461
     injectJS: function (text, sURL) {
       var
-        targ,
+        tgt,
         scriptNode = document.createElement('script');
 
       scriptNode.type = "text/javascript";
@@ -64,8 +64,8 @@
         scriptNode.src = s_URL;
       }
 
-      targ = document.getElementsByTagName('head')[0] || document.body || document.documentElement;
-      targ.appendChild(scriptNode);
+      tgt = document.getElementsByTagName('head')[0] || document.body || document.documentElement;
+      tgt.appendChild(scriptNode);
     },
     
     // localStorage
@@ -99,37 +99,31 @@
     var lsData = localStorage;
     if (lsData['ew-hide-buttons']) {
       Utils.ls.set('hide-buttons', lsData['ew-hide-buttons']);
-      //localStorage.setItem(account.account.uid + '-ews-hide-buttons', lsData['ew-hide-buttons']);
       localStorage.removeItem('ew-hide-buttons');
     }
     
     if (lsData['ews-settings']) {
       Utils.ls.set('settings', lsData['ews-settings']);
-      // localStorage.setItem(account.account.uid + '-ews-settings', lsData['ews-settings']);
       localStorage.removeItem('ews-settings');
     }
     
     if (lsData['ewsAccuData']) {
       Utils.ls.set('accu-data', lsData['ewsAccuData']);
-      // localStorage.setItem(account.account.uid + '-ews-accu-data', lsData['ewsAccuData']);
       localStorage.removeItem('ewsAccuData');
     }
     
     if (lsData['ewsLastHighlighted']) {
       Utils.ls.set('last-highlighted', lsData['ewsLastHighlighted']);
-      // localStorage.setItem(account.account.uid + '-ews-last-highlighted', lsData['ewsLastHighlighted']);
       localStorage.removeItem('ewsLastHighlighted');
     }
     
     if (lsData['ewsSCHistory']) {
       Utils.ls.set('sc-history', lsData['ewsSCHistory']);
-      // localStorage.setItem(account.account.uid + '-ews-sc-history', lsData['ewsSCHistory']);
       localStorage.removeItem('ewsSCHistory');
     }
     
     if (lsData['overview-draggable']) {
       Utils.ls.set('overview-draggable', lsData['overview-draggable']);
-      // localStorage.setItem(account.account.uid + '-ews-overview-draggable', lsData['overview-draggable']);
       localStorage.removeItem('overview-draggable');
     }
     // end: migration
@@ -187,6 +181,10 @@
     this.delete = function (key, callback) {
       getStore('readwrite', 'delete', key, callback);
     };
+    
+    this.openCursor = function (callback) {
+      getStore('readwrite', 'openCursor', null, callback);
+    };
   }
   // end: indexedDB
   
@@ -204,6 +202,52 @@ function StatsPanel() {
   this.map = null;
   this.dataType = 'points';
   this.timeRange = 'day';
+  
+  (function addMenuItem() {
+    var
+      li, a, list;
+
+    li = document.createElement('li');
+    li.style.cursor = 'pointer';
+    a = document.createElement('a');
+    a.id = 'ewsLink';
+    a.innerHTML = 'Stats';
+    li.appendChild(a);
+    list = Utils.gid('nav').getElementsByTagName('ul')[0];
+    list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
+  })();
+
+  // Stats dialog sceleton  
+  $('body').append(
+   `<div id=ewsPanel>
+      <div class="ewsNavButtonGroup" id=ewsTimeRangeSelection>
+        <div class="ewsNavButton selected" data-time-range="day">today</div>
+        <div class="ewsNavButton" data-time-range="week">week</div>
+        <div class="ewsNavButton" data-time-range="month">month</div>
+      </div>
+      <div id=ewsWorldMap style="width: 873px; height: 400px;"></div>
+      <table id=ewsChartWrapper>
+        <tr>
+          <td id=ewsLeftCell>
+          </td>
+          <td id=ewsAvg>
+          </td>
+          <td id=ewsRightCell>
+            <div id=ewsChartFixedWrapper>
+              <canvas id=ewsChart></canvas>
+              <div id=ewsChartCenterLabel></div>
+              <div id=ewsChartLegend></div>
+            </div>
+          </td>
+        </tr>
+      </table>
+      <div class="ewsNavButtonGroup" id=ewsDataTypeSelection>
+        <div class="ewsNavButton selected" data-data-type="points">points</div>
+        <div class="ewsNavButton" data-data-type="cubes">cubes</div>
+        <div class="ewsNavButton" data-data-type="people">people</div>
+      </div>
+    </div>`
+  );
 
 
   this.generateTableRow = function (position, flag, name, value, highlight) {
@@ -683,6 +727,9 @@ function StatsPanel() {
   });
 
   $('#ewsLink').click(function () {
+    if (!_this.map) {
+      _this.createMap();
+    }
     $('#ewsPanel').dialog('open');
   });
 
@@ -717,6 +764,7 @@ function StatsPanel() {
     _this.getData();
   });
 
+  this.createChart('points');
 }
 // end: STATS PANEL
 
@@ -925,7 +973,6 @@ function AccuChart() {
     $('#accuracy-bar-2-' + id).prev().addClass('accuracy-bar-cover-2-highlighted');
 
     Utils.ls.set('last-highlighted', id);
-    // localStorage.setItem(account.account.uid + '-ews-last-highlighted', id);
   };
 
 
@@ -961,7 +1008,7 @@ function AccuChart() {
 
     document.getElementsByClassName('accu-refresh-progress-bar')[0].value = 100;
 
-    if (!refreshData) {
+    if (!refreshData  || !settings.get('ews-accu-bars')) {
       this.animateRefreshProgressBar(); // to still check every minute, if there's something to refresh, but not to connect to the server, if there isn't anything
       return;
     }
@@ -1004,7 +1051,6 @@ function AccuChart() {
       }
 
       Utils.ls.set('accu-data', JSON.stringify(accuData));
-      // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     });
 
     $.getJSON('https://eyewire.org//1.0/player/accuracyBreakdown/2', function (data) {
@@ -1042,7 +1088,6 @@ function AccuChart() {
       }
 
       Utils.ls.set('accu-data', JSON.stringify(accuData));
-      // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     });
 
   };
@@ -1063,9 +1108,7 @@ function AccuChart() {
       contFlag = false,
       row,
       values = Utils.ls.get('accu-data'),
-      // values = localStorage.getItem(account.account.uid + '-ews-accu-data'),
       lastHighlightedBar = Utils.ls.get('last-highlighted');
-      // lastHighlightedBar = localStorage.getItem(account.account.uid + '-ews-last-highlighted');
 
     $('body').append(
       '<div id="accuracy-container">' +
@@ -1163,7 +1206,6 @@ function AccuChart() {
     accuData.push({action: action, val: val, wt: wt, lvl: lvl, score: score, cellId: cellId, cubeId: cubeId, timestamp: timestamp});
     accuData.shift();
     Utils.ls.set('accu-data', JSON.stringify(accuData));
-    // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     this.updateAccuracyBars();
     this.highlightBar(59);
   };
@@ -1190,7 +1232,6 @@ function AccuChart() {
 
     accuData[barId] = data;
     Utils.ls.set('accu-data', JSON.stringify(accuData));
-    // localStorage.setItem(account.account.uid + '-ews-accu-data', JSON.stringify(accuData));
     this.highlightBar(barId);
   };
 
@@ -1218,6 +1259,9 @@ function AccuChart() {
 
     return -1;
   };
+  
+  
+  this.generateAccuracyWidgetHTML();
   
   
   $(document).on('cube-submission-data', function (event, data) {
@@ -1280,7 +1324,7 @@ function AccuChart() {
       var
         html, action, val,
         lbl = Utils.gid('accu-floating-label'),
-        data = JSON.parse(this.nextSibling.dataset.accuracy);
+        data = JSON.parse(this.nextElementSibling.dataset.accuracy);
 
       if (!data || typeof data.val === 'undefined') {
         return;
@@ -1324,7 +1368,7 @@ function AccuChart() {
   })
   .on('click', '.accuracy-bar-cover-2', function (event) {
     var
-      data = JSON.parse(this.nextSibling.dataset.accuracy);
+      data = JSON.parse(this.nextElementSibling.dataset.accuracy);
 
     if (!data || typeof data.cubeId === 'undefined') {
       return false;
@@ -1334,7 +1378,7 @@ function AccuChart() {
   })
   .on('contextmenu', '.accuracy-bar-cover-2', function (event) {
     var
-      data = JSON.parse(this.nextSibling.dataset.accuracy);
+      data = JSON.parse(this.nextElementSibling.dataset.accuracy);
 
     if (!data || typeof data.cubeId === 'undefined') {
       return false;
@@ -1409,7 +1453,7 @@ function SCHistory() {
     modal: true,
     show: true,
     dialogClass: 'ews-dialog',
-    title: 'Cubes completed in cells SCed during last 7 days',
+    title: 'Cubes completed in cells SCed during last 30 days',
     width: 800,
     open: function (event, ui) {
       $('.ui-widget-overlay').click(function() { // close by clicking outside the window
@@ -1426,18 +1470,35 @@ function SCHistory() {
               url.indexOf('/1.0/task/') !== -1 &&
               url.indexOf('/submit') === -1 &&
               method.toLowerCase() === 'post') {
-            $(document).trigger('votes-updated', {cellId: tomni.cell, cellName: tomni.getCurrentCell().info.name});
+            $(document).trigger('votes-updated', {cellId: tomni.cell, cellName: tomni.getCurrentCell().info.name, datasetId: tomni.getCurrentCell().info.dataset_id});
           }
         }, false);
         open.call(this, method, url, async, user, pass);
       };
     }) (XMLHttpRequest.prototype.open)
   `);
+  
+  if (!Utils.ls.get('sc-history-updated')) {
+    Utils.ls.set('sc-history-updated', true);
+    let scHistory = Utils.ls.get('sc-history');
+    if (scHistory) {
+      scHistory = JSON.parse(scHistory);
+      for (let cellId in scHistory) {
+        $.getJSON('https://eyewire.org/1.0/cell/' + cellId, function (data) {
+          if (data) {
+            // we net to read and write to localStorage everytime, because async
+            let his = JSON.parse(Utils.ls.get('sc-history'));
+            his[cellId].datasetId = data.dataset_id;
+            Utils.ls.set('sc-history', JSON.stringify(his));
+          }
+        });
+      }
+    }
+  }
 
-  this.updateCount = function (count, cellId, cellName, timestamp) {
+  this.updateCount = function (count, cellId, cellName, timestamp, datasetId) {
     var
       lsHistory = Utils.ls.get('sc-history');
-      // lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
@@ -1446,45 +1507,75 @@ function SCHistory() {
       lsHistory = {};
     }
 
-    lsHistory[cellId] = {count: count, ts: timestamp, name: cellName};
+    lsHistory[cellId] = {count: count, ts: timestamp, name: cellName, datasetId: datasetId};
 
     Utils.ls.set('sc-history', JSON.stringify(lsHistory));
-    // localStorage.setItem(account.account.uid + '-ews-sc-history', JSON.stringify(lsHistory));
   };
 
   this.removeOldEntries = function () {
     var
       cellId,
       now = Date.now(),
-      sevenDays = 1000 * 60 * 60 * 24 * 7,
+      thirtyDays = 1000 * 60 * 60 * 24 * 30,
       lsHistory = Utils.ls.get('sc-history');
-      // lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
       for (cellId in lsHistory) {
         if (lsHistory.hasOwnProperty(cellId)) {
-          if (now - lsHistory[cellId].ts > sevenDays) {
+          if (now - lsHistory[cellId].ts > thirtyDays) {
             delete lsHistory[cellId];
           }
         }
       }
       Utils.ls.set('sc-history', JSON.stringify(lsHistory));
-      // localStorage.setItem(account.account.uid + '-ews-sc-history', JSON.stringify(lsHistory));
+    }
+  };
+  
+  this.removeEntry = function (cellId) {
+    var
+      lsHistory = Utils.ls.get('sc-history');
+    
+    if (lsHistory && lsHistory !== '{}') {
+      lsHistory = JSON.parse(lsHistory);
+      delete lsHistory[cellId];
+      Utils.ls.set('sc-history', JSON.stringify(lsHistory));
     }
   };
 
   this.updateDialogWindow = function () {
     var
       cellId,
-      html, el,
-      threshold,
+      html = '',
+      el, threshold,
       lsHistory = Utils.ls.get('sc-history');
-      // lsHistory = localStorage.getItem(account.account.uid + '-ews-sc-history');
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
-      html = '<table><tr><th># of SCs</th><th>Cell Name</th><th>Cell ID</th><th>Timestamp</th><th>sc-info</th><th>sc-info Results<th></tr>';
+      html += `
+        <div class="ewsNavButtonGroup" id="ews-sc-history-period-selection">
+          <div class="ewsNavButton" data-time-range="day">last 24h</div>
+          <div class="ewsNavButton" data-time-range="week">last 7 days</div>
+          <div class="ewsNavButton selected" data-time-range="month">last 30 days</div>
+        </div>
+        <div class="ewsNavButtonGroup" id="ews-sc-history-dataset-selection">
+          <div class="ewsNavButton" data-type="1">Mouse's Retina</div>
+          <div class="ewsNavButton" data-type="11">Zebrafish's Hindbrain</div>
+          <div class="ewsNavButton selected" data-type="both">Both</div>
+        </div>
+      `;
+
+      html += `<table id="ews-sc-history-results">
+        <thead><tr>
+          <th># of SCs</th>
+          <th>Cell Name</th>
+          <th>Cell ID</th>
+          <th>Timestamp</th>
+          <th>sc-info</th>
+          <th>Cubes you can SC</th>
+          <th>&nbsp;</th>
+        </tr></thead>`;
+      html += '<tbody>';
       for (cellId in lsHistory) {
         if (lsHistory.hasOwnProperty(cellId)) {
           el = lsHistory[cellId];
@@ -1497,10 +1588,23 @@ function SCHistory() {
           else {
             threshold = '';
           }
-          html += '<tr><td' + threshold + '>' + el.count + '</td><td class="sc-history-cell-name">' + el.name + '</td><td class="sc-history-cell-id">' + cellId + '</td><td>' + (new Date(el.ts)).toLocaleString() + '</td><td><button class="sc-history-check-button minimalButton">Check</button><td class="sc-history-results"></td></tr>';
+
+          html += `<tr
+          data-cell-id="` + cellId + `"
+          data-timestamp="` + el.ts + `"
+          data-dataset-id="` + el.datasetId + `"
+          >
+            <td` + threshold + `>` + el.count + `</td>
+            <td class="sc-history-cell-name">` + el.name + `</td>
+            <td class="sc-history-cell-id">` + cellId + `</td>
+            <td>` + (new Date(el.ts)).toLocaleString() + `</td>
+            <td><button class="sc-history-check-button minimalButton">Check</button></td>
+            <td class="sc-history-results"></td>
+            <td><button class="sc-history-remove-button minimalButton">Remove</button></td>
+          </tr>`;
         }
       }
-      html += '</table>';
+      html += '</tbody></table>';
     }
     else {
       html = 'no cubes SCed for last 7 days or since installing the script';
@@ -1509,6 +1613,30 @@ function SCHistory() {
     Utils.gid('ewsSCHistoryWrapper').innerHTML = html;
   };
 
+  
+  this.filter = function (period, type) {
+    var
+      range,
+      day = 1000 * 60 * 60 * 24,
+      now = Date.now(),
+      rows = document.querySelectorAll('#ews-sc-history-results tbody tr');
+
+      switch (period) {
+        case 'day': range = now - day; break;
+        case 'week': range = now - 7 * day; break;
+        case 'month': range = now - 30 * day; break;
+      }
+      
+      
+      for (let row of rows) {
+        if (row.dataset.timestamp >= range && (type === 'both' || row.dataset.datasetId == type)) {
+          row.style.display = 'table-row';
+        }
+        else {
+          row.style.display = 'none';
+        }
+      }
+  };
 
   $(document)
     .on('contextmenu', '#profileButton', function (e) {
@@ -1541,7 +1669,7 @@ function SCHistory() {
           return;
         }
 
-        _this.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now());
+        _this.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now(), _data.dataset_id);
 
         if (!btn.hasClass('on1') && settings.get('ews-auto-refresh-showmeme')) {
           if (btn.hasClass('on2')) {
@@ -1560,18 +1688,28 @@ function SCHistory() {
 
         }
       });
+    })
+    .on('ews-setting-changed', function (evt, data) {
+      if (data.setting === 'ews-accu-bars') {
+        if (data.state) {
+          Utils.gid('accuracy-container').style.display = 'block';
+        }
+        else {
+          Utils.gid('accuracy-container').style.display = 'none';
+        }
+      }
     });
 
   $('#ewsSCHistoryWrapper')
     .on('click', '.sc-history-cell-name', function () {
-      tomni.setCell({id: this.nextSibling.innerHTML});
+      tomni.setCell({id: this.nextElementSibling .innerHTML});
     })
     .on('click', '.sc-history-check-button', function () {
       var
         _this = this,
         semaphore = 3,
         tasks, scytheData, completeData, myTasks,
-        cellId = this.parentNode.previousSibling.previousSibling.innerHTML;
+        cellId = this.parentNode.parentNode.dataset.cellId;
 
         function cleanTasks(potentialTasks, taskArray) {
           var
@@ -1635,7 +1773,7 @@ function SCHistory() {
               cleanTasks(potentialTasks, data["2"].map(function(elem) { return elem.task_id; }));
             }
 
-            _this.parentNode.nextSibling.innerHTML = "Cubes you can SC: " + potentialTasks.length;
+            _this.parentNode.nextElementSibling.innerHTML = potentialTasks.length;
 
         });
       }
@@ -1655,6 +1793,30 @@ function SCHistory() {
         completeData = _completeData;
         runWhenDone();
       });
+    })
+    .on('click', '.sc-history-remove-button', function () {
+      var id;
+
+      id = this.parentNode.parentNode.getElementsByClassName('sc-history-cell-id')[0].innerHTML;
+      _this.removeEntry(id);
+      this.parentNode.parentNode.remove();
+    })
+    .on('click', '#ews-sc-history-period-selection .ewsNavButton, #ews-sc-history-dataset-selection .ewsNavButton', function () {
+      var
+        period, type;
+
+      $(this)
+        .parent()
+          .find('.ewsNavButton')
+            .removeClass('selected')
+          .end()
+        .end()
+        .addClass('selected');
+        
+      period = $('#ews-sc-history-period-selection .selected').data('timeRange');
+      type = $('#ews-sc-history-dataset-selection .selected').data('type');
+
+      _this.filter(period, type);
     });
 }
 // end: SC HISTORY
@@ -1666,12 +1828,12 @@ var EwsSettings = function () {
   var settings = {
     'ews-auto-refresh-showmeme': false,
     'ews-custom-highlight': false,
-    'ews-submit-using-spacebar': false
+    'ews-submit-using-spacebar': false,
+    'ews-accu-bars': true
   };
   var settingsName = account.account.uid + '-ews-settings';
 
   var stored = Utils.ls.get('settings');
-  // var stored = localStorage.getItem(settingsName);
   if(stored) {
     $.extend(settings, JSON.parse(stored));
   }
@@ -1711,7 +1873,6 @@ var EwsSettings = function () {
     `);
     
     Utils.gid('ews-custom-highlight-color').style.backgroundColor = Utils.ls.get('custom-highlight-color') || '#929292';
-    // Utils.gid('ews-custom-highlight-color').style.backgroundColor = localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292';
     
     function applyColor(color) {
       var
@@ -1719,7 +1880,6 @@ var EwsSettings = function () {
 
       Utils.gid('ews-custom-highlight-color').style.backgroundColor = clr;
       Utils.ls.set('custom-highlight-color', clr);
-      // localStorage.setItem(account.account.uid + '-ews-custom-highlight-color', clr);
       
       if (highlight) {
         highlight.refresh();
@@ -1729,9 +1889,9 @@ var EwsSettings = function () {
     $('#ews-custom-highlight-color').spectrum({
       showInput: true,
       preferredFormat: 'hex',
-      //showButtons: false,
       color: Utils.ls.get('custom-highlight-color') || '#929292',
-      // color: localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292',
+      containerClassName: 'ews-color-picker',
+      replacerClassName: 'ews-color-picker',
       move: applyColor,
       change: applyColor
     });
@@ -1744,11 +1904,11 @@ var EwsSettings = function () {
   }
 
   add('Submit using Spacebar', 'ews-submit-using-spacebar');
+  add('Show Accuracy Bars', 'ews-accu-bars');
 
   this.set = function(setting, value) {
     settings[setting] = value;
     Utils.ls.set('settings', JSON.stringify(settings));
-    // localStorage.setItem(settingsName, JSON.stringify(settings));
   };
 
   this.getAll = function () {
@@ -1798,7 +1958,46 @@ var EwsSettings = function () {
 function CustomHighlight() {
   var
     _this = this,
-    currentCellId = '';
+    currentCellId = '',
+    highlightButton = document.querySelector('.control.highlight button');
+
+  $('body').append('<div id="ewsCustomHighlightedCells"><div id="ewsCustomHighlightedCellsWrapper"></div></div>');
+  
+   $('#ewsCustomHighlightedCells').dialog({
+    autoOpen: false,
+    hide: true,
+    modal: true,
+    show: true,
+    dialogClass: 'ews-dialog',
+    title: 'Cells containing your Custom Highlighted cubes',
+    width: 800,
+    open: function (event, ui) {
+      $('.ui-widget-overlay').click(function() { // close by clicking outside the window
+        $('#ewsCustomHighlightedCells').dialog('close');
+      });
+    }
+  });
+  
+  // adding names and dataset_ids for cells with cubes highlighted pre-1.5
+  if (!Utils.ls.get('custom-highlight-updated')) {
+    Utils.ls.set('custom-highlight-updated', true);
+    db.openCursor(function (cursor) {
+      let cellName;
+
+      if (cursor) {
+        (function (crsr) {
+          $.getJSON('https://eyewire.org/1.0/cell/' + crsr.value.cellId, function (data) {
+            if (data) {
+              crsr.value.name = data.name;
+              crsr.value.datasetId = data.dataset_id;
+              db.put(crsr.value);
+            }
+          });
+        })(cursor);
+        cursor.continue();
+      }
+    });
+  }
 
   $('#cubeInspectorFloatingControls .controls').append(`
     <div class="control custom-highlight">
@@ -1821,12 +2020,14 @@ function CustomHighlight() {
       </div>
     </div>
   `);
-  
+
   $('.custom-highlight, .custom-unhighlight').css('display', settings.get('ews-custom-highlight') ? 'block' : 'none');
+  highlightButton.disabled = !settings.get('ews-custom-highlight');
+  highlightButton.classList.toggle('active', settings.get('ews-custom-highlight'));
+
 
   function getColor() {
     return  Utils.ls.get('custom-highlight-color') || '#929292';
-    // return  localStorage.getItem(account.account.uid + '-ews-custom-highlight-color') || '#929292';
   }
 
   this.highlight = function (cellId, cubeIds) {
@@ -1836,18 +2037,15 @@ function CustomHighlight() {
     // object will always be procceded at the end overwriting settings from the previous objects
     // Luckily, the {1} objects seems to ne unused, while it can be still used for the Custom Highlighting
     // and the order in the highlights object won't change
-    tomni.threeD.getCell(cellId).highlight({cubeids: cubeIds, color: getColor(), zindex: 1});
+    tomni.getCurrentCell().highlight({cubeids: cubeIds, color: getColor(), zindex: 1});
     tomni.getCurrentCell().update();
   };
-/*
-// tomni(...)unhighlight unhighlights whole layer(s), e.g. ...unhighlight([1, 5]);
-// to unhighlight a cube, just use highlight() with a list without the cube as argument
-// to unhighlight whole cell use an empty array as argument
-  this.unhighlight = function (cellId, cubeIds) {
-    tomni.threeD.getCell(cellId).unhighlight(cubeIds);
+
+  this.unhighlight = function (cellId) {
+    tomni.getCurrentCell().unhighlight([1]);
     tomni.getCurrentCell().update();
   };
-*/
+
   this.highlightCell = function () {
     var
       cellId = this.getCurrentCellId();
@@ -1860,7 +2058,7 @@ function CustomHighlight() {
           }
         });
       }
-  }
+  };
 
   this.getCurrentCubeId = function () {
     return tomni.getTarget()[0].id;
@@ -1872,7 +2070,7 @@ function CustomHighlight() {
 
   this.add = function (direction) {
     var
-      cubes,
+      cubes, cellName,
       cubeId = this.getCurrentCubeId(),
       cellId = this.getCurrentCellId();
 
@@ -1883,12 +2081,14 @@ function CustomHighlight() {
       db.get(cellId, function (result) {
         if (!result) {
           cubes = [cubeId];
+          cellName = tomni.getCurrentCell().info.name;
         }
         else {
           // source: https://stackoverflow.com/a/38940354
           cubes = [...new Set([...result.cubeIds, cubeId])];
+          cellName = result.name;
         }
-        db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()}, function () {
+        db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now(), name: cellName, datasetId: tomni.getCurrentCell().info.dataset_id}, function () {
           _this.highlight(cellId, cubes);
         });
       });
@@ -1898,7 +2098,7 @@ function CustomHighlight() {
 
   this.addRelatives = function (direction, self) {
     var
-      dataToUse, cubes,
+      dataToUse, cubes, cellName,
       cellId = this.getCurrentCellId();
 
     $.getJSON('/1.0/task/' + self + '/hierarchy', function (data) {
@@ -1906,11 +2106,13 @@ function CustomHighlight() {
       db.get(cellId, function (result) {
         if (!result) {
           cubes = [...dataToUse, self];
+          cellName = tomni.getCurrentCell().info.name;
         }
         else {
           cubes = [...new Set([...result.cubeIds, ...dataToUse, self])];
+          cellName = result.name;
         }
-        db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()}, function () {
+        db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now(), name: cellName, datasetId: tomni.getCurrentCell().info.dataset_id}, function () {
           _this.highlight(cellId, cubes);
         });
       });
@@ -1933,8 +2135,8 @@ function CustomHighlight() {
           index = result.cubeIds.indexOf(cubeId);
           if (index > -1) {
             result.cubeIds.splice(index, 1);
-            cubes = result.cubeIds;
-            db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()});
+            result.timestamp = Date.now();
+            db.put(result);
             _this.highlight(cellId, cubes);
           }
         }
@@ -1957,12 +2159,22 @@ function CustomHighlight() {
         if (result) {
           // source: https://stackoverflow.com/a/33034768
           cubes = result.cubeIds.filter(x => dataToUse.indexOf(x) == -1);
-          db.put({cellId: cellId, cubeIds: cubes, timestamp: Date.now()});
+          result.cubeIds = cubes;
+          result.timestamp = Date.now();
+          db.put(result);
           _this.highlight(cellId, cubes);
         }
       });
     });
   };
+  
+  this.removeCell = function (cellId) {
+    db.delete(cellId, function () {
+      if (cellId == tomni.cell) {
+        _this.unhighlight();
+      }
+    });
+  }
 
   this.refresh = function () {
     var
@@ -1973,9 +2185,86 @@ function CustomHighlight() {
           _this.highlight(cellId, result.cubeIds);
         }
       });
-
-
   };
+
+
+  this.showList = function () {
+    var
+      html = '';
+
+    html += `
+      <div class="ewsNavButtonGroup" id="ews-custom-highlight-period-selection">
+        <div class="ewsNavButton" data-time-range="day">last 24h</div>
+        <div class="ewsNavButton" data-time-range="week">last 7 days</div>
+        <div class="ewsNavButton" data-time-range="month">last 30 days</div>
+        <div class="ewsNavButton selected" data-time-range="allthetime">all the time</div>
+      </div>
+      <div class="ewsNavButtonGroup" id="ews-custom-highlight-dataset-selection">
+        <div class="ewsNavButton" data-type="1">Mouse's Retina</div>
+        <div class="ewsNavButton" data-type="11">Zebrafish's Hindbrain</div>
+        <div class="ewsNavButton selected" data-type="both">Both</div>
+      </div>
+    `;
+    html += '<table id="ews-custom-highlight-results">';
+    html += `<thead><tr>
+      <th># of Highlights</th>
+      <th>Cell Name</th>
+      <th>Cell ID</th>
+      <th>Timestamp</th>
+      <th>&nbsp;</th>
+    </tr></thead>`;
+    html += '<tbody>';
+
+    db.openCursor(function (cursor) {
+      if (cursor) {
+        html += `<tr
+          data-cell-id="` + cursor.value.cellId + `"
+          data-timestamp="` + cursor.value.timestamp + `"
+          data-dataset-id="` + cursor.value.datasetId + `"
+        >
+          <td>` + cursor.value.cubeIds.length + `</td>
+          <td class="custom-highlighted-cell-name">` + cursor.value.name + `</td>
+          <td>` + cursor.value.cellId + `</td>
+          <td>` + (new Date(cursor.value.timestamp)).toLocaleString() + `</td>
+          <td><button class="minimalButton">Remove</button></td>
+        </tr>`;
+        cursor.continue();
+      }
+      else {
+        html += '</tbody></table>';
+
+        Utils.gid('ewsCustomHighlightedCellsWrapper').innerHTML = html;
+        $('#ewsCustomHighlightedCells').dialog('open');
+      }
+    });
+  };
+  
+   
+  this.filter = function (period, type) {
+    var
+      range,
+      day = 1000 * 60 * 60 * 24,
+      now = Date.now(),
+      rows = document.querySelectorAll('#ews-custom-highlight-results tbody tr');
+
+      switch (period) {
+        case 'day': range = now - day; break;
+        case 'week': range = now - 7 * day; break;
+        case 'month': range = now - 30 * day; break;
+        case 'allthetime': range = 0; break;
+      }
+      
+      
+      for (let row of rows) {
+        if (row.dataset.timestamp >= range && (type === 'both' || row.dataset.datasetId == type)) {
+          row.style.display = 'table-row';
+        }
+        else {
+          row.style.display = 'none';
+        }
+      }
+  };
+
 
 
   // source: https://stackoverflow.com/a/10828021
@@ -2043,7 +2332,24 @@ function CustomHighlight() {
       .removeClass('active')
       .prop('disabled', true);
     }
-  });
+  })
+  .on('click', '#ews-custom-highlight-period-selection .ewsNavButton, #ews-custom-highlight-dataset-selection .ewsNavButton', function () {
+      var
+        period, type;
+
+      $(this)
+        .parent()
+          .find('.ewsNavButton')
+            .removeClass('selected')
+          .end()
+        .end()
+        .addClass('selected');
+        
+      period = $('#ews-custom-highlight-period-selection .selected').data('timeRange');
+      type = $('#ews-custom-highlight-dataset-selection .selected').data('type');
+
+      _this.filter(period, type);
+    });
   
   // source: https://beta.eyewire.org/static/js/omni.js
   var controlset = ['highlight', 'unhighlight'];
@@ -2104,6 +2410,7 @@ function CustomHighlight() {
   $(document)
     .on('click', '.custom-highlight button', function () {
       if ($(this).hasClass('active')) {
+        // if (this.classList.contains('active')) {}
         _this.add();
       }
     })
@@ -2131,6 +2438,24 @@ function CustomHighlight() {
       if ($('.custom-unhighlight button').hasClass('active')) {
         _this.remove({parents: true});
       }
+    })
+    .on('click', '.control.highlight button', function () {
+      if ($(this).hasClass('active')) {
+        _this.showList();
+      }
+    });
+
+  $(document)
+    .on('click', '.custom-highlighted-cell-name', function () {
+      tomni.setCell({id: this.nextElementSibling .innerHTML});
+    })
+    .on('click', '#ewsCustomHighlightedCellsWrapper button', function () {
+      var
+        cellId = this.parentNode.previousElementSibling.previousElementSibling.innerHTML,
+        row = this.parentNode.parentNode;
+
+      _this.removeCell(parseInt(cellId, 10));
+      row.remove();
     });
     
   function recalculateFloatingControlPanelWidth() {
@@ -2165,11 +2490,13 @@ function CustomHighlight() {
           _this.highlight(tomni.cell, data.cubeIds);
         });
         $('.custom-highlight, .custom-unhighlight').css('display', 'block');
+        document.querySelector('.control.highlight button').disabled = false;
         recalculateFloatingControlPanelWidth();
       }
       else {
         _this.highlight(tomni.cell, []);
         $('.custom-highlight, .custom-unhighlight').css('display', 'none');
+        document.querySelector('.control.highlight button').disabled = true;
         recalculateFloatingControlPanelWidth();
       }
     }
@@ -2178,29 +2505,16 @@ function CustomHighlight() {
 // end: CUSTOM HIGHLIGHT
 
 
-function addMenuItem() {
-  var
-    li, a, list;
 
-  li = document.createElement('li');
-  li.style.cursor = 'pointer';
-  a = document.createElement('a');
-  a.id = 'ewsLink';
-  a.innerHTML = 'Stats';
-  li.appendChild(a);
-  list = Utils.gid('nav').getElementsByTagName('ul')[0];
-  list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
-}
 
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=3');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=4');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=2');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
-addMenuItem();
-$('body').append(GM_getResourceText('base_html'));
 
 
 // source: https://stackoverflow.com/a/14488776
+// to allow html code in the title option of a dialog window
 $.widget('ui.dialog', $.extend({}, $.ui.dialog.prototype, {
   _title: function(title) {
     if (!this.options.title) {
@@ -2213,29 +2527,27 @@ $.widget('ui.dialog', $.extend({}, $.ui.dialog.prototype, {
 }));
 
 
-var panel = new StatsPanel();
-var chart = new AccuChart();
-
 var
-  settings,
   history,
   highlight,
   db;
 
-settings = new EwsSettings();
+var settings = new EwsSettings();  
+var panel = new StatsPanel();
+var chart = new AccuChart();
+
+
 
 if (account.roles.scout) {
-  // if (settings.get('ews-custom-highlight')) { // always create the highlight object ofr Scouts and higher, to be able to switch the CH anytime
-    db = new Database();
-    highlight = new CustomHighlight();
-    if (localStorage.getItem('ews-highlight-data')) { // migrating from localStorage to IndexedDB
-      let ls = JSON.parse(localStorage.getItem('ews-highlight-data'));
-      for (let cellId in ls) {
-        db.put({cellId: cellId, cellIds: ls[cellId], timestamp: Date.now()});
-      }
-      localStorage.removeItem('ews-highlight-data');
+  db = new Database();
+  highlight = new CustomHighlight();
+  if (localStorage.getItem('ews-highlight-data')) { // migrating from localStorage to IndexedDB
+    let ls = JSON.parse(localStorage.getItem('ews-highlight-data'));
+    for (let cellId in ls) {
+      db.put({cellId: cellId, cellIds: ls[cellId], timestamp: Date.now()});
     }
-  // }
+    localStorage.removeItem('ews-highlight-data');
+  }
 }
 
 if (account.roles.scythe || account.roles.mystic) {
@@ -2243,12 +2555,6 @@ if (account.roles.scythe || account.roles.mystic) {
   history.removeOldEntries();
 }
 
-setTimeout(function () { // some weird race condition causing errors while try to zoom the map
-  panel.createMap();
-}, 0);
-panel.createChart('points');
-
-chart.generateAccuracyWidgetHTML();
 
 
 var originalSaveTask = tomni.taskManager.saveTask;
