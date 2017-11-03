@@ -594,6 +594,7 @@
 #ews-custom-highlight-dataset-selection {
     display: inline-block;
     width: 50%;
+    float: left;
 }
 
 #ews-sc-history-period-selection .ewsNavButton,
@@ -602,5 +603,4 @@
 #ews-custom-highlight-dataset-selection .ewsNavButton {
     display: inline-block;
     width: auto;
-    float: left;
 }
