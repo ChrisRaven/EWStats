@@ -506,3 +506,8 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
 .ews-color-picker .sp-choose.minimalButton {
     color: #e4e1e1;
 }
+
+.ews-color-picker .so-inout {
+    margin-left: -75px;
+    width: 180px;
+}
