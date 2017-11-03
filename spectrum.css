@@ -424,7 +424,7 @@ See http://bgrins.github.io/spectrum/themes/ for instructions.
     border: solid 1px #d0d0d0;
 }
 
-.ews-color-picker .sp-container {
+.ews-color-picker.sp-container {
     padding-bottom:0;
 }
 
