@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.5.1
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1478,8 +1478,9 @@ function SCHistory() {
     }) (XMLHttpRequest.prototype.open)
   `);
   
-  if (!Utils.ls.get('sc-history-updated')) {
+  if (!Utils.ls.get('sc-history-updated') || !Utils.ls.get('sc-history-updated-second-attempt')) {
     Utils.ls.set('sc-history-updated', true);
+    Utils.ls.get('sc-history-updated-second-attempt', true);
     let scHistory = Utils.ls.get('sc-history');
     if (scHistory) {
       scHistory = JSON.parse(scHistory);
@@ -1669,7 +1670,7 @@ function SCHistory() {
           return;
         }
 
-        _this.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now(), _data.dataset_id);
+        _this.updateCount(JSONData.scythe[uid].length, _data.cellId, _data.cellName, Date.now(), _data.datasetId);
 
         if (!btn.hasClass('on1') && settings.get('ews-auto-refresh-showmeme')) {
           if (btn.hasClass('on2')) {
