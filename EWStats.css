@@ -110,7 +110,8 @@
     opacity: 0.3
 }
 
-.ewsNavButtonGroup {
+.ewsNavButtonGroup,
+.profileNavButtonGroup {
     text-align: center;
     margin-bottom: 7px;
     width: 100%;
@@ -124,7 +125,8 @@
     justify-content: space-between;
 }
 
-.ewsNavButtonGroup div {
+.ewsNavButtonGroup div,
+.profileNavButtonGroup div {
     margin-left: 7px;
     box-sizing: border-box;
     -webkit-box-flex: 1;
@@ -136,7 +138,8 @@
     margin-left: 0;
 }
 
-.ewsNavButton {
+.ewsNavButton,
+.profileNavButton {
     cursor: pointer;
     border: 1px solid rgba(60,60,60,.83);
     padding: 7px;
@@ -152,15 +155,18 @@
     width: 100%;
 }
 
-.ewsNavButton:hover {
+.ewsNavButton:hover,
+.profileNavButton:hover {
     background-color:hsla(0,0%,100%,.11);
 }
 
-.ewsNavButton:active {
+.ewsNavButton:active,
+.profileNavButton:active {
     background-color:hsla(0,0%,100%,.07);
 }
 
-.ewsNavButton.selected {
+.ewsNavButton.selected,
+.profileNavButton.selected {
     background-color: rgba(54,121,165,.8);
 }
 
