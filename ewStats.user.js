@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.5.2
+// @version      1.5.3
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1108,10 +1108,26 @@ function AccuChart() {
       contFlag = false,
       row,
       values = Utils.ls.get('accu-data'),
-      lastHighlightedBar = Utils.ls.get('last-highlighted');
+      lastHighlightedBar = Utils.ls.get('last-highlighted'),
+      settings,
+      visibilityState = 'block';
+      
+      settings = Utils.ls.get('settings');
+
+      if (settings) {
+        settings = JSON.parse(settings);
+        if (settings['ews-accu-bars']) {
+          visibilityState = 'block';
+          Utils.gid('activityTrackerContainer').style.display = 'none';
+        }
+        else {
+          visibilityState = 'none';
+          Utils.gid('activityTrackerContainer').style.display = 'block';
+        }
+      }
 
     $('body').append(
-      '<div id="accuracy-container">' +
+      '<div id="accuracy-container" style="display:' + visibilityState + ';">' +
         '<span id="more-less-button" data-state="closed">more &darr;</span>' +
         '<div id="accuracy-bars-wrapper-2"></div>' +
         '<div id="weight-wrapper">' +
@@ -1417,31 +1433,34 @@ function AccuChart() {
       Utils.gid('accu-floating-label').style.display = 'none';
     });
 
-  $(document).on('click', '#more-less-button', function () {
-    var
-      panel = Utils.gid('accuracy-bars-wrapper-2');
+  $(document)
+    .on('click', '#more-less-button', function () {
+      var
+        panel = Utils.gid('accuracy-bars-wrapper-2');
 
-    if (this.dataset.state === 'closed') {
+      if (this.dataset.state === 'closed') {
 
-      this.dataset.state = 'opened';
-      this.innerHTML = 'less &uarr;';
-      panel.style.height = '371px';
-      $('.hideable-bar').css('display', 'inline-block');
-    }
-    else {
-      this.dataset.state = 'closed';
-      this.innerHTML = 'more &darr;';
-      panel.style.height = '44px';
-      $('.hideable-bar').css('display', 'none');
-    }
-  })
-  .on('ews-setting-changed', function (evt, data) {console.log('changed')
+        this.dataset.state = 'opened';
+        this.innerHTML = 'less &uarr;';
+        panel.style.height = '371px';
+        $('.hideable-bar').css('display', 'inline-block');
+      }
+      else {
+        this.dataset.state = 'closed';
+        this.innerHTML = 'more &darr;';
+        panel.style.height = '44px';
+        $('.hideable-bar').css('display', 'none');
+      }
+    })
+    .on('ews-setting-changed', function (evt, data) {console.log('changed')
       if (data.setting === 'ews-accu-bars') {
         if (data.state) {
           Utils.gid('accuracy-container').style.display = 'block';
+          Utils.gid('activityTrackerContainer').style.display = 'none';
         }
         else {
           Utils.gid('accuracy-container').style.display = 'none';
+          Utils.gid('activityTrackerContainer').style.display = 'block';
         }
       }
     });
@@ -1917,23 +1936,20 @@ var EwsSettings = function () {
   };
 
 
-  this.refresh = function () {
-    // source: crazyman's script
-    $('#ews-settings-group input').each(function() {
-      var
-      elem, pref, sets;
+  // source: crazyman's script
+  $('#ews-settings-group input').each(function() {
+    var
+    elem, pref, sets;
 
-      elem = $(this);
-      pref = this.id;
-      sets = _this.getAll();
+    elem = $(this);
+    pref = this.id;
+    sets = _this.getAll();
 
-      this.checked = sets[pref];
-      elem.add(elem.closest('.checkbox')).removeClass(sets[pref] ? 'off' : 'on').addClass(sets[pref] ? 'on' : 'off');
-      $(document).trigger('ews-setting-changed', {setting: pref, state: sets[pref]});
-    });
-  };
+    this.checked = sets[pref];
+    elem.add(elem.closest('.checkbox')).removeClass(sets[pref] ? 'off' : 'on').addClass(sets[pref] ? 'on' : 'off');
+    $(document).trigger('ews-setting-changed', {setting: pref, state: sets[pref]});
+  });
 
-  this.refresh();
 
   $('#ews-settings-group input').closest('div.setting').click(function(evt) {
     var
@@ -2596,9 +2612,6 @@ $('body').keydown(function (evt) {
 });
 // end: submit using Spacebar
 
-setTimeout(function () {
-  settings.refresh();
-}, 2000);
 
 } // end: main()
 
