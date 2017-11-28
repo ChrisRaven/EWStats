@@ -2528,7 +2528,7 @@ function CustomHighlight() {
 
 
 
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=4');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=5');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
