@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      1.5.3
+// @version      1.5.4
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -1110,21 +1110,22 @@ function AccuChart() {
       values = Utils.ls.get('accu-data'),
       lastHighlightedBar = Utils.ls.get('last-highlighted'),
       settings,
-      visibilityState = 'block';
+      visibilityState = 'block',
+      intv;
       
       settings = Utils.ls.get('settings');
 
       if (settings) {
         settings = JSON.parse(settings);
-        if (settings['ews-accu-bars']) {
-          visibilityState = 'block';
-          Utils.gid('activityTrackerContainer').style.display = 'none';
-        }
-        else {
-          visibilityState = 'none';
-          Utils.gid('activityTrackerContainer').style.display = 'block';
-        }
+        visibilityState = settings['ews-accu-bars'] ? 'block' : 'none';
       }
+      
+      intv = setInterval(function () {
+        if (Utils.gid('activityTrackerContainer')) {
+          Utils.gid('activityTrackerContainer').style.display = settings['ews-accu-bars'] ? 'none' :'block';
+          clearInterval(intv);
+        }
+      }, 50);
 
     $('body').append(
       '<div id="accuracy-container" style="display:' + visibilityState + ';">' +
@@ -1452,7 +1453,7 @@ function AccuChart() {
         $('.hideable-bar').css('display', 'none');
       }
     })
-    .on('ews-setting-changed', function (evt, data) {console.log('changed')
+    .on('ews-setting-changed', function (evt, data) {
       if (data.setting === 'ews-accu-bars') {
         if (data.state) {
           Utils.gid('accuracy-container').style.display = 'block';
@@ -2528,7 +2529,7 @@ function CustomHighlight() {
 
 
 
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=5');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=4');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
