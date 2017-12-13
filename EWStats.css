@@ -646,11 +646,13 @@
 }
 
 #profileTimeRangeSelection,
-#ews-profile-history-period-selection {
+#ews-profile-history-period-selection,
+#lastChartsWrapper {
     display: none;
 }
 
 .own-profile #profileTimeRangeSelection,
-.own-profile #ews-profile-history-period-selection {
+.own-profile #ews-profile-history-period-selection,
+.own-profile #lastChartsWrapper {
     display: flex;
 }
