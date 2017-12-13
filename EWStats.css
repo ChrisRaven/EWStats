@@ -652,7 +652,10 @@
 }
 
 .own-profile #profileTimeRangeSelection,
-.own-profile #ews-profile-history-period-selection,
-.own-profile #lastChartsWrapper {
+.own-profile #ews-profile-history-period-selection {
     display: flex;
+}
+
+.own-profile #lastChartsWrapper {
+    display: block;
 }
