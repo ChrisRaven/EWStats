@@ -645,4 +645,12 @@
     height: 280px;
 }
 
+#profileTimeRangeSelection,
+#ews-profile-history-period-selection {
+    display: none;
+}
 
+.own-profile #profileTimeRangeSelection,
+.own-profile, #ews-profile-history-period-selection {
+    display: flex;
+}
