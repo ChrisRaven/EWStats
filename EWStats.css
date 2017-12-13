@@ -651,6 +651,6 @@
 }
 
 .own-profile #profileTimeRangeSelection,
-.own-profile, #ews-profile-history-period-selection {
+.own-profile #ews-profile-history-period-selection {
     display: flex;
 }
