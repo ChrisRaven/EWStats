@@ -622,7 +622,7 @@
 }
 
 .own-profile {
-    height: 800px;
+    height: 800px !important;
 }
 
 .own-profile #performanceBadges {
