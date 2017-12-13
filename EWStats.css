@@ -620,3 +620,29 @@
     display: inline-block;
     width: auto;
 }
+
+.own-profile {
+    height: 800px;
+}
+
+.own-profile #performanceBadges {
+    overflow-y: auto;
+    height: 535px;
+}
+
+.own-profile #profProfile {
+    height: 700px;
+}
+
+.own-profile #lastChartsWrapper {
+    display: inline-block;
+    margin-top: 30px;
+}
+
+.own-profile #ewsProfileHistoryChart {
+    display: inline-block;
+    width: 800px;
+    height: 280px;
+}
+
+
