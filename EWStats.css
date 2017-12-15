@@ -270,6 +270,9 @@
 
 #customTimeRangeSelectionDialog {
     display: none;
+}
+
+.custom-time-range-selection-dialog {
     background-color: rgba(27,27,27,1);
 }
 
