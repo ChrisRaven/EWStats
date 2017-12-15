@@ -270,6 +270,7 @@
 
 #customTimeRangeSelectionDialog {
     display: none;
+    background-color: rgba(27,27,27,1);
 }
 
 /* ACCURACY CHART */
