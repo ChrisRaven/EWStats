@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.0.0
+// @version      2.0.1
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -21,6 +21,8 @@
 
 /*jshint esversion: 6 */
 /*globals $, account, indexedDB, GM_getResourceText, GM_xmlhttpRequest, Chart, tomni, Keycodes, Cell, ColorUtils */
+
+const DEBUG = false;
 
 (function() {
   'use strict';
@@ -147,7 +149,8 @@
         let onejan = new Date(year, 0, 4);
         let currentWeek = Math.ceil((((currentHqDate - onejan) / 86400000) + onejan.getDay() + 1) / 7);
         let periodLength = 10;
-        let starter = currentWeek - periodLength;
+        // -1 below, because we want the last day of the period to be the last completed week, not the current one
+        let starter = currentWeek - periodLength - 1;
         let cursor;
 
         if (asDates) {
@@ -164,7 +167,6 @@
               year++;
             }
           }
-          
         }
         else {
           if (starter <= 0) {
@@ -353,7 +355,15 @@ function StatsPanel() {
     a.innerHTML = 'Stats';
     li.appendChild(a);
     list = Utils.gid('nav').getElementsByTagName('ul')[0];
-    list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
+    if (list) {
+      list.insertBefore(li, list.lastChild.previousSibling); // for some reason the last child (the "Challenge" button) isn't the last child)
+    }
+    else {
+      let ul = document.createElement('ul');
+      ul.appendChild(li);
+      Utils.gid('homelogo').after(ul);
+    }
+    
   })();
 
   // Stats dialog sceleton  
@@ -363,7 +373,7 @@ function StatsPanel() {
         <div class="ewsNavButton selected" data-time-range="day">today</div>
         <div class="ewsNavButton" data-time-range="week">week</div>
         <div class="ewsNavButton" data-time-range="month">month</div>
-        <div class="ewsNavButton" data-time-range="custom">custom</div>
+        <div class="ewsNavButton" id="ewsCustomPeriodSelection" data-time-range="custom">custom</div>
       </div>
       <div id=ewsWorldMap style="width: 873px; height: 400px;"></div>
       <table id=ewsChartWrapper>
@@ -386,9 +396,43 @@ function StatsPanel() {
         <div class="ewsNavButton" data-data-type="cubes">cubes</div>
         <div class="ewsNavButton" data-data-type="people">people</div>
       </div>
-    </div>`
+    </div>
+    <div id="customTimeRangeSelectionDialog">
+      <input type="radio" name="radioTimeRangeSelection">day<br>
+      <input type="radio" name="radioTimeRangeSelection">week<br>
+      <input type="radio" name="radioTimeRangeSelection">month<br>
+      <input type="radio" name="radioTimeRangeSelection">custom<br>
+      <table>
+        <tr>
+          <td><label for="timerange-selection-from">From</label></td>
+          <td><input id="time-range-selection-from"></td>
+        </tr>
+        <tr>
+          <td><label for="time-range-selection-to">To</label></td>
+          <td><input id="time-range-selection-to"></td>
+        </tr>
+      </table>
+    </div>
+    `
   );
 
+  $('#customTimeRangeSelectionDialog')
+    .dialog({
+      resizable: false,
+      width: 400,
+      height: "auto",
+      autoOpen: false,
+      modal: true,
+      title: 'Select time range',
+      dialogClass: 'custom-time-range-selection-dialog',
+      buttons: {
+        "Save Record": function () {},
+        Cancel: function () {
+          $(this).dialog("close");
+        }
+      }
+    })
+    .css('display', 'block');
 
   this.generateTableRow = function (position, flag, name, value, highlight) {
     return '<tr class="ewsRankingRow' + (highlight ? 'Highlight' : 'Normal') + '">' + // highlighting currently not used
@@ -841,6 +885,10 @@ function StatsPanel() {
     });
   };
   
+  this.showCustomTimeRangeSelectionDialog = function () {
+    $('#customTimeRangeSelectionDialog').dialog('open');
+  };
+  
   // source: https://stackoverflow.com/a/68503
   $(document)
     .ajaxStart(function () {
@@ -908,6 +956,10 @@ function StatsPanel() {
       _this.timeRange = data.timeRange;
     }
     _this.getData();
+  });
+  
+  $('#ewsCustomPeriodSelection').click(function () {
+    _this.showCustomTimeRangeSelectionDialog();
   });
 
   this.createChart('points');
@@ -3116,13 +3168,13 @@ function Tracker() {
   this.updateServer = function (callback) {
     GM_xmlhttpRequest({
       method: 'POST',
-      url: 'http://ewstats.feedia.co/update_server_counters.php',
+      url: 'http://ewstats.feedia.co/update_server_counters' + (DEBUG ? '_dev' : '') + '.php',
       data: 'data=' + encodeURIComponent(Utils.ls.get('profile-history')) +
             '&uid=' + encodeURIComponent(account.account.uid),
       headers:    {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      onload: function (response) {
+      onload: function (response) {//console.log(response.responseText);return;
         if (response.responseText === 'ok') {
           if (callback) {
             callback();
@@ -3149,10 +3201,10 @@ function Tracker() {
 
     GM_xmlhttpRequest({
       method: 'GET',
-      url: 'http://ewstats.feedia.co/update_local_counters.php?' + data,
+      url: 'http://ewstats.feedia.co/update_local_counters' + (DEBUG ? '_dev' : '') + '.php?' + data,
       onload: function (response) {
         if (response && response.responseText) {
-          //console.log(response.responseText);return;
+          // console.log(response.responseText);return;
           let data = JSON.parse(response.responseText);
           if (data.result === 'ok') {
             Utils.ls.set('profile-history-previous', JSON.stringify({
@@ -3202,7 +3254,12 @@ function Tracker() {
     if (!lastUpdateDate || lastUpdateDate != Utils.calculateHqDate()) {
       _this.updateServer(function () {
         _this.updateClient(function () {
-          Utils.ls.set(propName, Utils.calculateHqDate());
+          if (DEBUG) {
+            Utils.ls.set(propName, 1);
+          }
+          else {
+            Utils.ls.set(propName, Utils.calculateHqDate());
+          }
         });
       });
     }
@@ -3414,13 +3471,41 @@ $('body').keydown(function (evt) {
   }
 });
 // end: submit using Spacebar
-/*$('#nav').append('<button id=test-button>Test</button>');
-$('#test-button').click(function () {
-  tracker.updateLocalDataFromServer();
-});
-*/
 
+$('body').append(`
+<button id="test-button" style="position: absolute; left: 100px; top: 10px; z-index: 101;">Test</button>
+`);
 
+if (DEBUG) {
+  $('#test-button').click(function () {
+    testFunction();
+  });
+}
 } // end: main()
+
+
+if (DEBUG) {
+
+
+function testFunction() {
+  let data = [
+      'uid=' + account.account.uid,
+      'previous=1',
+      'best=1',
+      'charts=1'
+    ].join('&');
+
+    GM_xmlhttpRequest({
+      method: 'GET',
+      url: 'http://ewstats.feedia.co/update_local_counters' + (DEBUG ? '_dev' : '') + '.php?' + data,
+      onload: function (response) {
+        console.log('result: ', response ? response.responseText : '');
+        console.log(response);
+      }
+    });
+}
+
+
+}
 
 })(); // end: wrapper
