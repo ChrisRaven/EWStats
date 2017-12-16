@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.0.1
+// @version      2.0.2
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -1113,7 +1113,8 @@ Cell.ScytheVisionColors = {
       el = Utils.gid('accuracy-value');
 
     el.style.color = typeof val === 'number' && val === 100 && action === 'played' ? '#00FF00' : '#E4E1E1';
-    el.innerHTML = val + (typeof val === 'string' && action !== 'played' ? '' : '%');
+    // el.innerHTML = val + (typeof val === 'string' && action !== 'played' ? '' : '%');
+    el.innerHTML = action === 'played' ? val + '%' : '--';
   };
 
 
@@ -1274,7 +1275,7 @@ Cell.ScytheVisionColors = {
         if (accuData[i] && accuData[i].cubeId) {
           el = indexedData[accuData[i].cubeId];
           if (el) {
-            // if all 3 values are equal 0, it means, that it was a 100% cube with nothing to add. Trying to divive 200*0 / 2*0+0+0 would give a NaN
+            // if all 3 values are equal to 0, it means, that it was a 100% cube with nothing to add. Trying to divive 200*0 / 2*0+0+0 would give a NaN
             if (el.tp === 0 && el.fp === 0 && el.fn === 0) {
               accu = 100;
             }
