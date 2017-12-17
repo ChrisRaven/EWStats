@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.0.2
+// @version      2.0.3
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -3473,11 +3473,12 @@ $('body').keydown(function (evt) {
 });
 // end: submit using Spacebar
 
-$('body').append(`
-<button id="test-button" style="position: absolute; left: 100px; top: 10px; z-index: 101;">Test</button>
-`);
-
+    
 if (DEBUG) {
+  $('body').append(`
+    <button id="test-button" style="position: absolute; left: 100px; top: 10px; z-index: 101;">Test</button>
+  `);
+
   $('#test-button').click(function () {
     testFunction();
   });
