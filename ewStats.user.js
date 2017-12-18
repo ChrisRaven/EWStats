@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.0.3
+// @version      2.0.4
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -142,12 +142,13 @@ const DEBUG = false;
       },
 
       tenWeeks: function (asDates = false) {
+        let $ISOLeapYears = [2015, 2020, 2026, 2032, 2037, 2043, 2048, 2054, 2060, 2065, 2071, 2076, 2082, 2088, 2093, 2099, 2105];
         let result = [];
         let currentHqDate = new Date(Utils.calculateHqDate());
         let year = currentHqDate.getFullYear();
-        // source: https://stackoverflow.com/a/27125580
+        // source: https://stackoverflow.com/a/27125580 (modified for Sunday to be the first day)
         let onejan = new Date(year, 0, 4);
-        let currentWeek = Math.ceil((((currentHqDate - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+        let currentWeek = Math.ceil((((currentHqDate - onejan) / 86400000) + onejan.getDay() + 3) / 7);
         let periodLength = 10;
         // -1 below, because we want the last day of the period to be the last completed week, not the current one
         let starter = currentWeek - periodLength - 1;
@@ -162,9 +163,11 @@ const DEBUG = false;
           while (periodLength--) {
             result.push(year + '-' + (cursor < 10 ? '0' : '') + cursor);
             ++cursor;
-            if (cursor > 52) {
-              cursor = 1;
-              year++;
+            if (cursor === 53) {
+              if ($ISOLeapYears.indexOf(year) === -1) {
+                cursor = 1;
+                year++;
+              }
             }
           }
         }
@@ -175,11 +178,11 @@ const DEBUG = false;
           cursor = starter;
           while (periodLength--) {
             result.push(cursor);
-            if (cursor > 52) {
-              cursor = 1;
-            }
-            else {
-              ++cursor;
+            ++cursor;
+            if (cursor === 53) {
+              if ($ISOLeapYears.indexOf(year) === -1) {
+                cursor = 1;
+              }
             }
           }
         }
@@ -3175,7 +3178,11 @@ function Tracker() {
       headers:    {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
-      onload: function (response) {//console.log(response.responseText);return;
+      onload: function (response) {
+        if (DEBUG && 0) {
+          console.log(response.responseText);
+          return;
+        }
         if (response.responseText === 'ok') {
           if (callback) {
             callback();
@@ -3205,7 +3212,10 @@ function Tracker() {
       url: 'http://ewstats.feedia.co/update_local_counters' + (DEBUG ? '_dev' : '') + '.php?' + data,
       onload: function (response) {
         if (response && response.responseText) {
-          // console.log(response.responseText);return;
+          if (DEBUG && 1) {
+            console.log(response.responseText);
+            return;
+          }
           let data = JSON.parse(response.responseText);
           if (data.result === 'ok') {
             Utils.ls.set('profile-history-previous', JSON.stringify({
@@ -3252,7 +3262,7 @@ function Tracker() {
   (function update() {
     let propName = 'profile-history-last-update-date';
     let lastUpdateDate = Utils.ls.get(propName);
-    if (!lastUpdateDate || lastUpdateDate != Utils.calculateHqDate()) {
+    if (!lastUpdateDate || lastUpdateDate != Utils.calculateHqDate() || DEBUG) {
       _this.updateServer(function () {
         _this.updateClient(function () {
           if (DEBUG) {
@@ -3478,36 +3488,37 @@ if (DEBUG) {
   $('body').append(`
     <button id="test-button" style="position: absolute; left: 100px; top: 10px; z-index: 101;">Test</button>
   `);
+  
+  
+function testFunction() {
+GM_xmlhttpRequest({
+      method: 'POST',
+      url: 'http://ewstats.feedia.co/update_server_counters' + (DEBUG ? '_dev' : '') + '.php',
+      data: 'data=' + encodeURIComponent(Utils.ls.get('profile-history')) +
+            '&uid=' + encodeURIComponent(account.account.uid),
+      headers:    {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      onload: function (response) {console.log(response.responseText);return;
+        if (response.responseText === 'ok') {
+          if (callback) {
+            callback();
+          }
+        }
+      },
+      onerror: function (response) {
+        console.error('error: ', response);
+      },
+      ontimeout: function (response) {
+        console.error('timeout: ', response);
+      }
+    });
+}
 
   $('#test-button').click(function () {
     testFunction();
   });
 }
 } // end: main()
-
-
-if (DEBUG) {
-
-
-function testFunction() {
-  let data = [
-      'uid=' + account.account.uid,
-      'previous=1',
-      'best=1',
-      'charts=1'
-    ].join('&');
-
-    GM_xmlhttpRequest({
-      method: 'GET',
-      url: 'http://ewstats.feedia.co/update_local_counters' + (DEBUG ? '_dev' : '') + '.php?' + data,
-      onload: function (response) {
-        console.log('result: ', response ? response.responseText : '');
-        console.log(response);
-      }
-    });
-}
-
-
-}
 
 })(); // end: wrapper
