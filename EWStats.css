@@ -279,6 +279,10 @@
     font-family: Open Sans,sans-serif;
 }
 
+.ews-week-row-higlighting:hover {
+    background-color: gray;
+}
+
 /* ACCURACY CHART */
 
 #accuracy-chart {
