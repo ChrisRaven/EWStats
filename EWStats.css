@@ -283,6 +283,12 @@
     background-color: gray;
 }
 
+.datepicker-day,
+.datepicker-week,
+.datepicker-month {
+    z-index: 1800;
+}
+
 /* ACCURACY CHART */
 
 #accuracy-chart {
