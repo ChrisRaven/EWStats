@@ -4,10 +4,6 @@
     vertical-align: top !important;
 }
 
-.profPane {
-    overflow-y: auto !important;
-}
-
 
 #ewsPanel {
     display: none;
@@ -658,7 +654,7 @@
 }
 
 .own-profile {
-    height: 800px !important;
+    height: 720px !important;
 }
 
 .own-profile #performanceBadges {
@@ -667,7 +663,7 @@
 }
 
 .own-profile #profProfile {
-    height: 700px;
+    height: 620px;
 }
 
 .own-profile #lastChartsWrapper {
@@ -678,7 +674,7 @@
 .own-profile #ewsProfileHistoryChart {
     display: inline-block;
     width: 800px;
-    height: 280px;
+    height: 200px;
 }
 
 #profileTimeRangeSelection,
