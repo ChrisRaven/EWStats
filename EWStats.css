@@ -574,8 +574,9 @@
 #sc-history-popup {
     width: 200px;
     height: 100px;
-    background-color: black;
-    border: 1px solid gray;
+    color: #e4e1e1;
+    background-color: rgba(27,27,27,1);
+    border: 1px solid #565656;
     position: absolute;
     display: none;
     z-index: 1701;
