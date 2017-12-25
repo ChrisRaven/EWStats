@@ -589,7 +589,7 @@
     padding: 5px 10px;
 }
 
-$sc-history-popup span:hover {
+#sc-history-popup span:hover {
     background-color: #333;
 }
 
