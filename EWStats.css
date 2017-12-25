@@ -578,6 +578,7 @@
     border: 1px solid gray;
     position: absolute;
     display: none;
+    z-index: 1701;
 }
 
 
