@@ -571,6 +571,16 @@
     color: #00FF00;
 }
 
+#sc-history-popup {
+    width: 200px;
+    height: 100px;
+    background-color: black;
+    border: 1px solid gray;
+    position: absolute;
+    display: none;
+}
+
+
 .custom-highlight button {
     color: #e4e1e1;
     border-color: #434343;
