@@ -577,9 +577,18 @@
     color: #e4e1e1;
     background-color: rgba(27,27,27,1);
     border: 1px solid #565656;
+    font-size: 10pt;
     position: absolute;
     display: none;
     z-index: 1701;
+}
+
+#sc-history-popup span {
+    cursor: pointer;
+}
+
+$sc-history-popup span:hover {
+    backgroundc-color: #333;
 }
 
 
