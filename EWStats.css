@@ -1,3 +1,10 @@
+/* to fix 2px gap between some buttons */
+#homelogo ul {
+    font-size: 0;
+    vertical-align: top;
+}
+
+
 #ewsPanel {
     display: none;
     z-index: 2000;
