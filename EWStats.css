@@ -4,6 +4,10 @@
     vertical-align: top !important;
 }
 
+.profPane {
+    overflow-y: auto !important;
+}
+
 
 #ewsPanel {
     display: none;
