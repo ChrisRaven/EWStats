@@ -572,8 +572,8 @@
 }
 
 #sc-history-popup {
-    width: 200px;
-    height: 100px;
+    width: 305px;
+    height: 55px;
     color: #e4e1e1;
     background-color: rgba(27,27,27,1);
     border: 1px solid #565656;
@@ -585,10 +585,12 @@
 
 #sc-history-popup span {
     cursor: pointer;
+    display: inline-block;
+    padding: 5px 10px;
 }
 
 $sc-history-popup span:hover {
-    backgroundc-color: #333;
+    background-color: #333;
 }
 
 
