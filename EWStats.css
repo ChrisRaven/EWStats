@@ -587,6 +587,7 @@
     cursor: pointer;
     display: inline-block;
     padding: 5px 10px;
+    width: 285px;
 }
 
 #sc-history-popup span:hover {
