@@ -1,7 +1,7 @@
 /* to fix 2px gap between some buttons */
-#homelogo ul {
-    font-size: 0;
-    vertical-align: top;
+#nav ul {
+    font-size: 0 !important;
+    vertical-align: top !important;
 }
 
 
