@@ -559,6 +559,10 @@
     width: 150px;
 }
 
+#ewsSCHHistoryWrapper tr td:nth-child(7) { /* status */
+    width: 80px;
+}
+
 #ewsSCHistoryWrapper button {
     margin-right 10px;
 }
@@ -592,6 +596,10 @@
 
 #sc-history-popup span:hover {
     background-color: #333;
+}
+
+.sc-history-top-menu {
+    display: inline-block;
 }
 
 
