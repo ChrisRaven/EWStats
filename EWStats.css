@@ -598,8 +598,8 @@
     background-color: #333;
 }
 
-#sc-history-top-menu-wrapper {
-    padding-bottom: 20px;
+hr {
+    border-color: #555;
 }
 
 .sc-history-top-menu {
