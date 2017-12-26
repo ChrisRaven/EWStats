@@ -598,6 +598,10 @@
     background-color: #333;
 }
 
+#sc-history-top-menu-wrapper {
+    padding-bottom: 20px;
+}
+
 .sc-history-top-menu {
     display: inline-block;
 }
