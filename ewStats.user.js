@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.0.4
+// @version      2.1.0
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -15,7 +15,6 @@
 // @require      https://chrisraven.github.io/EWStats/jquery-jvectormap-world-mill.js
 // @require      https://chrisraven.github.io/EWStats/spectrum.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js
-// @resource     base_html https://chrisraven.github.io/EWStats/base.html
 // @resource     countries https://chrisraven.github.io/EWStats/countries.json
 // ==/UserScript==
 
@@ -23,6 +22,8 @@
 /*globals $, account, indexedDB, GM_getResourceText, GM_xmlhttpRequest, Chart, tomni, Keycodes, Cell, ColorUtils */
 
 const DEBUG = false;
+const TEST_SERVER_UPDATE = false;
+const TEST_CLIENT_UPDATE = false;
 
 (function() {
   'use strict';
@@ -31,6 +32,14 @@ const DEBUG = false;
   var Utils = {
     gid: function (id) {
       return document.getElementById(id);
+    },
+    
+    qS: function (sel) {
+      return document.querySelector(sel);
+    },
+    
+    qSa: function (sel) {
+      return document.querySelectorAll(sel);
     },
 
 
@@ -89,154 +98,210 @@ const DEBUG = false;
         localStorage.removeItem(account.account.uid + '-ews-' + key);
       }
     },
-
-    // returns a string in format YYYY-MM-DD calculated basing on the user time
-    calculateHqDate: function () {
-      return new Intl.DateTimeFormat('en-CA', {
-          timeZone: 'America/New_York',
-          year: 'numeric',
-          month: 'numeric',
-          day: 'numeric'
-        }).format(Date.now());
-    },
     
-    getLast: {
-      sevenDays: function (asDates = false) {
-        let result = [];
-        let currentHqDate = new Date(Utils.calculateHqDate());
-        let weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-        let currentDayOfWeek = currentHqDate.getDay();  
-        let weekLength = 7;
-        let cursor;
-        // we want to start from yesterday's date
-        
-        
-        if (asDates) {
-          cursor = new Date();
-          cursor.setDate(currentHqDate.getDate() - weekLength);
+    date: {
 
-          while (weekLength--) {
-            result.push(new Intl.DateTimeFormat('en-CA', {
-              year: 'numeric',
-              month: 'numeric',
-              day: 'numeric'
-            }).format(cursor));
-            cursor.setDate(cursor.getDate() + 1);
-          }
+    // returns date in format of YYYY-MM-DD
+      ISO8601DateStr: function (date) {
+        return new Intl.DateTimeFormat('en-CA', {
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+          }).format(date);
+      },
+      
+      // returns a string in format YYYY-MM-DD calculated basing on the user time
+      calculateHqDate: function () {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric'
+          }).format(Date.now());
+      },
+
+      getWeek: function (date) {
+        let firstDayOfTheYear = Utils.date.firstDayOfAYear(date.getFullYear());
+        let firstWednesday = 7 - firstDayOfTheYear - 3;
+        if (firstWednesday <= 0) {
+          firstWednesday += 7;
         }
-        else {
-          cursor = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
-          while (weekLength--) {
-            if (cursor >= 6) {
-              cursor -= 6;
+
+        let startOfTheFirstWeek = firstWednesday - 3;
+        let startOfTheFirstWeekDate = new Date(date.getFullYear(), 0, startOfTheFirstWeek);
+        let currentWeek = Math.ceil(((date - startOfTheFirstWeekDate) / 86400000) / 7);
+
+        return currentWeek;
+      },
+
+      // source: https://stackoverflow.com/a/16353241
+      isLeapYear: function (year) {
+        return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0);
+      },
+      
+      firstDayOfAYear: function (year) {
+        // 0 = Sunday, 1 = Monday, etc.
+        return (new Date(year, 0, 1)).getDay();
+      },
+      
+      numberOfWeeksInAYear: function (year) {
+        // assuming, that week belongs to the year, which contains the middle day
+        // of that week (which is Wednesday in case of Sun-Mon week)
+        let firstDay = Utils.date.firstDayOfAYear(year);
+        if (firstDay === 3 || Utils.date.isLeapYear(year) && (firstDay === 2 || firstDay === 4)) {
+          return 53;
+        }
+        return 52;
+      },
+
+      getLast: {
+        sevenDays: function (asDates = false) {
+          let result = [];
+          let currentHqDate = new Date(Utils.date.calculateHqDate());
+          let weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          let currentDayOfWeek = currentHqDate.getDay();  
+          let weekLength = 7;
+          let cursor;
+
+          if (asDates) {
+            cursor = new Date();
+            cursor.setDate(currentHqDate.getDate() - weekLength);
+
+            while (weekLength--) {
+              result.push(new Intl.DateTimeFormat('en-CA', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+              }).format(cursor));
+              cursor.setDate(cursor.getDate() + 1);
             }
-            else {
+          }
+          else {
+            cursor = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+            while (weekLength--) {
+              if (cursor >= 6) {
+                cursor -= 6;
+              }
+              else {
+                ++cursor;
+              }
+
+              result.push(weekdays[cursor]);
+            }
+          }
+          
+          return result;
+        },
+
+        tenWeeks: function (asDates = false) {
+          let result = [];
+          let currentHqDate = new Date(Utils.date.calculateHqDate());
+          let year = currentHqDate.getFullYear();
+          let currentWeek = Utils.date.getWeek(currentHqDate);
+          let periodLength = 10;
+          // -1 below, because we want the last day of the period to be the last completed week, not the current one,
+          // but +1, because we want to start at the first day of the period not from
+          // before the period started
+          let starter = currentWeek - periodLength - 1 + 1;
+          let cursor;
+          let numberOfWeeksInTheCurrentYear = Utils.date.numberOfWeeksInAYear(year);
+          let numberOfWeeksInThePreviousYear = Utils.date.numberOfWeeksInAYear(year - 1);
+
+          if (asDates) {
+            if (starter <= 0) {
+              year--;
+              starter += numberOfWeeksInThePreviousYear;
+            }
+            cursor = starter;
+            while (periodLength--) {
+              result.push(year + '-' + (cursor < 10 ? '0' : '') + cursor);
               ++cursor;
-            }
-
-            result.push(weekdays[cursor]);
-          }
-        }
-        
-        return result;
-      },
-
-      tenWeeks: function (asDates = false) {
-        let $ISOLeapYears = [2015, 2020, 2026, 2032, 2037, 2043, 2048, 2054, 2060, 2065, 2071, 2076, 2082, 2088, 2093, 2099, 2105];
-        let result = [];
-        let currentHqDate = new Date(Utils.calculateHqDate());
-        let year = currentHqDate.getFullYear();
-        // source: https://stackoverflow.com/a/27125580 (modified for Sunday to be the first day)
-        let onejan = new Date(year, 0, 4);
-        let currentWeek = Math.ceil((((currentHqDate - onejan) / 86400000) + onejan.getDay() + 3) / 7);
-        let periodLength = 10;
-        // -1 below, because we want the last day of the period to be the last completed week, not the current one
-        let starter = currentWeek - periodLength - 1;
-        let cursor;
-
-        if (asDates) {
-          if (starter <= 0) {
-            year--;
-            starter += 52;
-          }
-          cursor = starter;
-          while (periodLength--) {
-            result.push(year + '-' + (cursor < 10 ? '0' : '') + cursor);
-            ++cursor;
-            if (cursor === 53) {
-              if ($ISOLeapYears.indexOf(year) === -1) {
-                cursor = 1;
-                year++;
+              if (cursor >= 53) {
+                if (numberOfWeeksInTheCurrentYear === 52 || cursor === 54) {
+                  cursor = 1;
+                  year++;
+                }
               }
             }
           }
-        }
-        else {
-          if (starter <= 0) {
-            starter += 52;
-          }
-          cursor = starter;
-          while (periodLength--) {
-            result.push(cursor);
-            ++cursor;
-            if (cursor === 53) {
-              if ($ISOLeapYears.indexOf(year) === -1) {
-                cursor = 1;
+          else {
+            if (starter <= 0) {
+              starter += numberOfWeeksInThePreviousYear;
+            }
+            cursor = starter;
+            while (periodLength--) {
+              result.push(cursor);
+              ++cursor;
+              if (cursor >= 53) {
+                if (numberOfWeeksInTheCurrentYear === 52 || cursor === 54) {
+                  cursor = 1;
+                }
               }
             }
           }
-        }
-        
-        return result;
-      },
+          return result;
+        },
 
-      twelveMonths: function (asDates = false) {
-        let result = [];
-        let currentHqDate = new Date(Utils.calculateHqDate());
-        let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        let currentMonth = currentHqDate.getMonth();
-        let year = currentHqDate.getFullYear();
-        let yearLength = 12;
-        // we want to start from last month's date
-        let cursor = currentMonth === 0 ? 11 : currentMonth - 1;
-        
-        // no matter what, if we substract 12 months from the current date, we'll be in the previous year
-        --year;
+        twelveMonths: function (asDates = false) {
+          let result = [];
+          let currentHqDate = new Date(Utils.date.calculateHqDate());
+          let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          let currentMonth = currentHqDate.getMonth();
+          let year = currentHqDate.getFullYear();
+          let yearLength = 12;
+          // we want to start from last month's date
+          let cursor = currentMonth === 0 ? 11 : currentMonth - 1;
+          
+          // no matter what, if we substract 12 months from the current date, we'll be in the previous year
+          --year;
 
-        if (asDates) {
+          if (asDates) {
+              while (yearLength--) {
+              if (cursor >= 11) {
+                cursor -= 11;
+                ++year;
+              }
+              else {
+                ++cursor;
+              }
+
+              result.push(year + '-' + (cursor < 9 ? '0' : '') + (cursor + 1));
+            }
+          }
+          else {
             while (yearLength--) {
-            if (cursor >= 11) {
-              cursor -= 11;
-              ++year;
-            }
-            else {
-              ++cursor;
-            }
+              if (cursor >= 11) {
+                cursor -= 11;
+              }
+              else {
+                ++cursor;
+              }
 
-            result.push(year + '-' + (cursor < 9 ? '0' : '') + (cursor + 1));
+              result.push(months[cursor]);
+            }
           }
+          
+          return result;
         }
-        else {
-          while (yearLength--) {
-            if (cursor >= 11) {
-              cursor -= 11;
-            }
-            else {
-              ++cursor;
-            }
+      },
 
-            result.push(months[cursor]);
-          }
+      daysInMonth: function (month, year) {
+        if (['April', 'June', 'September', 'November'].indexOf(month) !== -1) {
+          return 30;
         }
-        
-        return result;
-      }
+        if (month === 'February') {
+          return Utils.date.isLeapYear(year) ? 29 : 28;
+        }
+        return 31;
+      },
+      
+      monthsFullNames: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
     }
   };
 
 
   var intv = setInterval(function () {
-    if (!account.account.uid) {
+    if (typeof account === 'undefined' || !account.account.uid) {
       return;
     }
     clearInterval(intv);
@@ -369,7 +434,7 @@ function StatsPanel() {
     
   })();
 
-  // Stats dialog sceleton  
+  // Stats dialog skeleton  
   $('body').append(
    `<div id=ewsPanel>
       <div class="ewsNavButtonGroup" id=ewsTimeRangeSelection>
@@ -400,43 +465,299 @@ function StatsPanel() {
         <div class="ewsNavButton" data-data-type="people">people</div>
       </div>
     </div>
-    <div id="customTimeRangeSelectionDialog">
-      <input type="radio" name="radioTimeRangeSelection">day<br>
-      <input type="radio" name="radioTimeRangeSelection">week<br>
-      <input type="radio" name="radioTimeRangeSelection">month<br>
-      <input type="radio" name="radioTimeRangeSelection">custom<br>
+    <div id="ewsCustomTimeRangeSelectionDialog">
       <table>
-        <tr>
-          <td><label for="timerange-selection-from">From</label></td>
-          <td><input id="time-range-selection-from"></td>
-        </tr>
-        <tr>
-          <td><label for="time-range-selection-to">To</label></td>
-          <td><input id="time-range-selection-to"></td>
-        </tr>
+        <tbody>
+          <tr>
+            <td><input type="radio" name="radioTimeRangeSelection" value="day" checked>day</td>
+            <td>
+              <select id="ewsTRSdayYear"></select>
+              <select id="ewsTRSdayMonth"></select>
+              <select id="ewsTRSdayDay"></select>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="radio" name="radioTimeRangeSelection" value="week">week</td>
+            <td>
+              <select id="ewsTRSweekYear"></select>
+              <select id="ewsTRSweekWeek"></select>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="radio" name="radioTimeRangeSelection" value="month">month</td>
+            <td>
+              <select id="ewsTRSmonthYear"></select>
+              <select id="ewsTRSmonthMonth"></select>
+            </td>
+          </tr>
+          <tr>
+            <td><input type="radio" name="radioTimeRangeSelection" value="custom">custom</td>
+          </tr>
+          <tr>
+            <td>From</td>
+            <td>
+              <select id="ewsTRScustomFromYear"></select>
+              <select id="ewsTRScustomFromMonth"></select>
+              <select id="ewsTRScustomFromDay"></select>
+            </td>
+          </tr>
+          <tr>
+            <td>To</td>
+            <td>
+              <select id="ewsTRScustomToYear"></select>
+              <select id="ewsTRScustomToMonth"></select>
+              <select id="ewsTRScustomToDay"></select>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
     `
   );
+  
+  let s = {
+    day: {
+      year: Utils.gid('ewsTRSdayYear'),
+      month: Utils.gid('ewsTRSdayMonth'),
+      day: Utils.gid('ewsTRSdayDay')
+    },
+    week: {
+      year: Utils.gid('ewsTRSweekYear'),
+      week: Utils.gid('ewsTRSweekWeek')
+    },
+    month: {
+      year: Utils.gid('ewsTRSmonthYear'),
+      month: Utils.gid('ewsTRSmonthMonth')
+    },
+    customFrom: {
+      year: Utils.gid('ewsTRScustomFromYear'),
+      month: Utils.gid('ewsTRScustomFromMonth'),
+      day: Utils.gid('ewsTRScustomFromDay')
+    },
+    customTo: {
+      year: Utils.gid('ewsTRScustomToYear'),
+      month: Utils.gid('ewsTRScustomToMonth'),
+      day: Utils.gid('ewsTRScustomToDay')
+    }
+  };
 
-  $('#customTimeRangeSelectionDialog')
+
+  $('#ewsCustomTimeRangeSelectionDialog')
     .dialog({
       resizable: false,
       width: 400,
-      height: "auto",
+      height: 'auto',
       autoOpen: false,
       modal: true,
       title: 'Select time range',
-      dialogClass: 'custom-time-range-selection-dialog',
+      dialogClass: 'ews-custom-time-range-selection-dialog',
+      open: function (evt) {
+        $('.ui-widget-overlay:last').click(function () {
+          $('.ews-custom-time-range-selection-dialog').find('.ui-dialog-content').dialog('close');
+        });
+      },
       buttons: {
-        "Save Record": function () {},
-        Cancel: function () {
-          $(this).dialog("close");
+        'Apply': function () {
+          let selection = document.querySelector('input[name="radioTimeRangeSelection"]:checked').value;
+          _this.customRangeType = selection;
+
+          switch (selection) {
+            case 'day':
+              _this.customDate =
+                s.day.year.value + '-' +
+                s.day.month.value + '-' +
+                s.day.day.value;
+              break;
+
+            case 'week':
+              _this.customDate =
+                s.week.year.value + '-' +
+                s.week.week.value;
+              break;
+
+            case 'month':
+              _this.customDate =
+                s.month.year.value + '-' +
+                s.month.month.value;
+              break;
+            case 'custom':
+              _this.customDate =
+                s.customFrom.year.value + '-' +
+                s.customFrom.month.value + '-' +
+                s.customFrom.day.value + '|' +
+                s.customTo.year.value + '-' +
+                s.customTo.month.value + '-' +
+                s.customTo.day.value;
+              break;
+          }
+
+          _this.getData();
+          $(this).dialog('close');
+        },
+        'Cancel': function () {
+          $(this).dialog('close');
         }
       }
     })
     .css('display', 'block');
+    
+    
+  function optionsYears(select) {
+    let str = '';
+    for (let i = 2017; i < 2100; i++) {
+      str += '<option value="' + i + '"' + (i === select ? ' selected' : '') + '>' + i;
+    }
+    
+    return str;
+  }
 
+  function optionsMonths(select) {
+    let str = '';
+    for (let i = 1, len = Utils.date.monthsFullNames.length + 1; i < len; i++) {
+      str += '<option value="' + (i < 10 ? '0' : '') + i + '"' + (i === select ? ' selected' : '') + '>' + Utils.date.monthsFullNames[i - 1];
+    }
+    
+    return str;
+  }
+  
+  function optionsWeeks(year, month, day) {
+    let str = '';
+    let val, txt, dt;
+    let firstDayOfTheYear = Utils.date.firstDayOfAYear(year);
+    let numberOfWeeks = Utils.date.numberOfWeeksInAYear(year);
+    let dayLengthInMs = 24 * 60 * 60 * 1000;
+    let dateDiff = 0;
+    let selected = false;
+    // the week containing the first Wednesday if the first week (Sun-Mon) of the year
+    let firstWednesday = 7 - firstDayOfTheYear - 3;
+    if (firstWednesday <= 0) {
+      firstWednesday += 7;
+    }
+    let date = new Date(year, 0, firstWednesday - 4); // -4 because -3 gives Sunday, but the loop below adds +1 to the first date, so we have to start a day earlier
+    for (let i = 1; i < numberOfWeeks + 1; i++) {
+      date.setDate(date.getDate() + 1);
+      if (month && day) {
+        dateDiff = (new Date(year, month - 1, day) - date) / dayLengthInMs;
+        if (dateDiff >= 0 && dateDiff <= 7) {
+          selected = true;
+        }
+        else {
+          selected = false;
+        }
+      }
+      dt = Utils.date.ISO8601DateStr(date);
+      val = (i < 10 ? '0' : '') + i + '|' + dt;
+      txt = i + ' (' + dt + ' - ';
+      date.setDate(date.getDate() + 6);
+      dt = Utils.date.ISO8601DateStr(date);
+      val += '|' + dt;
+      txt += dt + ')';
+      str += '<option value="' + val + '"' + (selected ? ' selected' : '') + '>' + txt;
+    }
+
+    return str;
+  }
+
+  function optionsDays(year, month, select) {
+    let str = '';
+    for (let i = 1, len = Utils.date.daysInMonth(month, year) + 1; i < len; i++) {
+      str += '<option value="' + (i < 10 ? '0' : '') + i + '"' + (i === select ? ' selected' : '') + '>' + i;
+    }
+    
+    return str;
+  }
+
+  
+  let date = new Date(Utils.date.calculateHqDate());
+  let currentMonth = date.getMonth() + 1;
+  date.setDate(date.getDate() - 1); // data for today is not available today
+  let year = date.getFullYear();
+  let month = date.getMonth() + 1;
+  let day = date.getDate();
+  date.setDate(date.getDate() - 6); // to get a date from the previous week
+
+  s.day.year.innerHTML = optionsYears(year);
+  s.day.month.innerHTML = optionsMonths(month);
+  s.day.day.innerHTML = optionsDays(year, month, day);
+  
+  s.week.year.innerHTML = optionsYears(date.getFullYear());
+  s.week.week.innerHTML = optionsWeeks(date.getFullYear(), date.getMonth() + 1, date.getDate());
+  
+  s.month.year.innerHTML = optionsYears(year);
+  s.month.month.innerHTML = optionsMonths(currentMonth - 1);
+  
+  s.customFrom.year.innerHTML = optionsYears(year);
+  s.customFrom.month.innerHTML = optionsMonths(month);
+  s.customFrom.day.innerHTML = optionsDays(year, month, day);
+
+  s.customTo.year.innerHTML = optionsYears(year);
+  s.customTo.month.innerHTML = optionsMonths(month);
+  s.customTo.day.innerHTML = optionsDays(year, month, day);
+  
+  s.customFrom.year.dataset.previousValue = s.customFrom.year.value;
+  s.customFrom.month.dataset.previousValue = s.customFrom.month.value;
+  s.customFrom.day.dataset.previousValue = s.customFrom.day.value;
+  
+  s.customTo.year.dataset.previousValue = s.customTo.year.value;
+  s.customTo.month.dataset.previousValue = s.customTo.month.value;
+  s.customTo.day.dataset.previousValue = s.customTo.day.value;
+
+  $('#ewsTRSdayYear, #ewsTRScustomFromYear, #ewsTRScustomToYear').change(function () {
+    // if the selected month is February, we have to be update the number of days
+    // according to the year (if is leap or not)
+    let idPart = this.id.replace('ewsTRS', '').replace('Year', '');
+    if (Utils.gid('ewsTRS' + idPart + 'Month').value === '2') {
+      Utils.gid('ewsTRS' + idPart + 'Day').innerHTML = optionsDays(this.value, Utils.date.monthsFullNames[1], 1);
+    }
+  });
+  
+  $('#ewsTRSdayMonth, #ewsTRScustomFromMonth, #ewsTRScustomToMonth').change(function () {
+    let idPart = this.id.replace('ewsTRS', '').replace('Month', '');
+    let year = Utils.gid('ewsTRS' + idPart + 'Year').value;
+    let month =  this.options[this.selectedIndex].text;
+    Utils.gid('ewsTRS' + idPart + 'Day').innerHTML = optionsDays(year, month, 1);
+  });
+  
+  
+  $('#ewsTRSweekYear').change(function () {
+    s.week.week.innerHTML = optionsWeeks(this.value);
+  });
+  
+  $('#ewsTRScustomFromYear, #ewsTRScustomFromMonth, #ewsTRScustomFromDay, #ewsTRScustomToYear, #ewsTRScustomToMonth, #ewsTRScustomToDay').change(function () {
+    
+    let fromYear = s.customFrom.year.value;
+    let fromMonth = s.customFrom.month.value;
+    let fromDay = s.customFrom.day.value;
+    
+    let toYear = s.customTo.year.value;
+    let toMonth = s.customTo.month.value;
+    let toDay = s.customTo.day.value;
+    
+    let previousFromYear = s.customFrom.year.dataset.previousValue;
+    let previousFromMonth = s.customFrom.month.dataset.previousValue;
+    let previousFromDay = s.customFrom.day.dataset.previousValue;
+    
+    let previousToYear = s.customTo.year.dataset.previousValue;
+    let previousToMonth = s.customTo.month.dataset.previousValue;
+    let previousToDay = s.customTo.day.dataset.previousValue;
+
+    // all the values above are string so we'll get a date not a sume of the numbers
+    if (fromYear + fromMonth + fromDay > toYear + toMonth + toDay) {
+      s.customFrom.year.value = previousFromYear;
+      s.customFrom.month.value = previousFromMonth;
+      s.customFrom.day.value = previousFromDay;
+
+      s.customTo.year.value = previousToYear;
+      s.customTo.month.value = previousToMonth;
+      s.customTo.day.value = previousToDay;
+      alert('The "To: " date cannot be earlier then the "From: " date.');
+    }
+    else {
+      this.dataset.previousValue = this.value;
+    }
+  });
+
+  
   this.generateTableRow = function (position, flag, name, value, highlight) {
     return '<tr class="ewsRankingRow' + (highlight ? 'Highlight' : 'Normal') + '">' + // highlighting currently not used
         '<td>' + position + '</td>' +
@@ -452,8 +773,13 @@ function StatsPanel() {
       position = 0,
       html = '';
 
-    for (let el of data) {
-      html += this.generateTableRow(++position, el.flag, el.name, el.value, el.highlight);
+    if (data === 'no-data') {
+      html = '<tr><td>NO DATA</td></tr>';
+    }
+    else {
+      for (let el of data) {
+        html += this.generateTableRow(++position, el.flag, el.name, el.value, el.highlight);
+      }
     }
 
     return '<table>' + html + '</table>';
@@ -461,27 +787,32 @@ function StatsPanel() {
 
 
   this.createTable = function (data, limit) {
-    var
-      tableData = [],
-      amountPerCountrySortedKeys = this.getSortedKeys(data);
-
-    if (typeof limit === 'undefined') {
-      limit = 10;
+    let tableData = [];
+      
+    if (data === 'no-data') {
+      tableData = data;
     }
+    else {
+      let amountPerCountrySortedKeys = this.getSortedKeys(data);
 
-     for (let index of amountPerCountrySortedKeys) {
-       if (index !== 'RD' && index !== 'EU') {
-         tableData.push({
-           flag: index.toLowerCase(),
-           name: countries[index.toLowerCase()],
-           value: data[index],
-           highlight: false
-         });
+      if (typeof limit === 'undefined') {
+        limit = 10;
+      }
 
-         limit--;
-       }
+       for (let index of amountPerCountrySortedKeys) {
+         if (index !== 'RD' && index !== 'EU') {
+           tableData.push({
+             flag: index.toLowerCase(),
+             name: countries[index.toLowerCase()],
+             value: data[index],
+             highlight: false
+           });
 
-      if (!limit) break;
+           limit--;
+         }
+
+        if (!limit) break;
+      }
     }
 
     return this.generateTableHTML(tableData);
@@ -597,14 +928,16 @@ function StatsPanel() {
       el, key,
       min = 1000, max = 0;
 
-    for (key in values) {
-      if (values.hasOwnProperty(key)) {
-        el = values[key];
-        if (el < min) {
-          min = el;
-        }
-        if (el > max) {
-          max = el;
+    if (values !== 'no-data') {
+      for (key in values) {
+        if (values.hasOwnProperty(key)) {
+          el = values[key];
+          if (el < min) {
+            min = el;
+          }
+          if (el > max) {
+            max = el;
+          }
         }
       }
     }
@@ -613,7 +946,10 @@ function StatsPanel() {
     this.map.params.series.regions[0].min = min;
     this.map.params.series.regions[0].max = max;
     this.map.series.regions[0].clear(); // if not cleared, the values, which aren't in the current set, remain from the previous set
-    this.map.series.regions[0].setValues(values);
+    
+    if (values !== 'no-data') {
+      this.map.series.regions[0].setValues(values);
+    }
   };
 
   this.createChart = function (label) {
@@ -720,9 +1056,19 @@ function StatsPanel() {
 
 
   this.updateChart = function (data) {
-    var
+    let
       html1, html2, html3,
-      chartData = this.getDataForChart(data);
+      chartData = this.getDataForChart(data),
+      date;
+
+    if (data === 'no-data') {
+      Utils.gid('ewsChartCenterLabel').innerHTML = 'NO DATA';
+      Utils.gid('ewsChartLegend').innerHTML = '';
+      chart.config.data.labels = [];
+      chart.config.data.datasets[0].data = [];
+      chart.update();
+      return;
+    }
 
     chart.config.data.labels = chartData.labels.slice(0);
     chart.config.data.datasets[0].data = chartData.values.slice(0);
@@ -748,6 +1094,33 @@ function StatsPanel() {
       case 'day': html3 = ' today'; break;
       case 'week': html3 = ' this week'; break;
       case 'month': html3 = ' this month'; break;
+      case 'custom':
+        switch (this.customRangeType) {
+          case 'day': html3 = ' on ' + this.customDate; break;
+          case 'week':
+            date = this.customDate.split('-');
+            date[1] = date[1].split('|');
+            date[1] = date[1][0];
+            let remainder = date[1] % 10;
+            let ordinal;
+            switch (remainder) {
+              case 1:  ordinal = 'st'; break;
+              case 2:  ordinal = 'nd'; break;
+              case 3:  ordinal = 'rd'; break;
+              default: ordinal = 'th';
+            }
+            html3 = ' at ' + parseInt(date[1]) + ordinal + ' week of ' + date[0];
+            break;
+          case 'month':
+            date = this.customDate.split('-');
+            html3 = ' in ' + Utils.date.monthsFullNames[date[1] - 1];
+            break;
+          case 'custom':
+            date = this.customDate.split('|').join(' and ');
+            html3 = ' between ' + date;
+            break;
+        }
+      break;
     }
 
 
@@ -833,6 +1206,11 @@ function StatsPanel() {
       html,
       html1, html2;
 
+    if (arguments[0] && arguments[0] === 'no-data') {
+      Utils.gid('ewsAvg').innerHTML = 'NO DATA';
+      return;
+    }
+    
     switch (this.dataType) {
       case 'points':
         html1 = 'points per user';
@@ -854,44 +1232,77 @@ function StatsPanel() {
       html += '<br><br><br>Average of ' + html2 + ':<br><span>' + this.countAveragePerCountry() + '</span>';
     }
 
-    $('#ewsAvg').html(html);
+    Utils.gid('ewsAvg').innerHTML = html;
   };
 
 
   this.getData = function () {
-    var
-      url = 'https://eyewire.org/1.0/stats/top/players/by/';
-
-    if (this.dataType === 'points' || this.dataType === 'people') {
-      url += 'points';
+    let url;
+    
+    // we are checking for the class to take into account both clicking Apply
+    // from the Custom dialog and changing the tabs at the bottom of the main dialog
+    if (Utils.gid('ewsCustomPeriodSelection').classList.contains('selected')) {
+      url = 'https://ewstats.feedia.co/custom_stats.php' +
+        '?type=' + this.dataType +
+        '&custom_range_type=' + this.customRangeType +
+        '&date=' + this.customDate;
+      
+      GM_xmlhttpRequest({
+        method: 'GET',
+        url: url,
+        onload: function (response) {
+          if (response && response.responseText) {
+            if (response.responseText !== '[]') {
+              let data = JSON.parse(response.responseText);
+              dataCurrentlyInUse = data;
+              data = _this.groupByCountry(data);
+              _this.updateMap(data);
+              _this.updateChart(data);
+              _this.updateTable(data);
+              _this.updateAverages();
+            }
+            else {
+              _this.updateMap('no-data');
+              _this.updateChart('no-data');
+              _this.updateTable('no-data', 0);
+              _this.updateAverages('no-data');
+            }
+          }
+        },
+        onerror: function (response) {
+          console.error('error: ', response);
+        }
+      });
     }
     else {
-      url += 'cubes';
-    }
+        url = 'https://eyewire.org/1.0/stats/top/players/by/';
 
-    url += '/per/';
+      if (this.dataType === 'points' || this.dataType === 'people') {
+        url += 'points';
+      }
+      else {
+        url += 'cubes';
+      }
 
-    if (this.timeRange === 'today') {
-      url += 'day';
-    }
-    else {
-      url += this.timeRange;
-    }
+      url += '/per/';
 
-    $.getJSON(url, function (data) {
-      dataCurrentlyInUse = data;
-      data = _this.groupByCountry(data);
-      _this.updateMap(data);
-      _this.updateChart(data);
-      _this.updateTable(data);
-      _this.updateAverages();
-    });
+      if (this.timeRange === 'today') {
+        url += 'day';
+      }
+      else {
+        url += this.timeRange;
+      }
+      $.getJSON(url, function (data) {
+        dataCurrentlyInUse = data;
+        data = _this.groupByCountry(data);
+        _this.updateMap(data);
+        _this.updateChart(data);
+        _this.updateTable(data);
+        _this.updateAverages();
+      });
+    }
   };
-  
-  this.showCustomTimeRangeSelectionDialog = function () {
-    $('#customTimeRangeSelectionDialog').dialog('open');
-  };
-  
+
   // source: https://stackoverflow.com/a/68503
   $(document)
     .ajaxStart(function () {
@@ -958,11 +1369,13 @@ function StatsPanel() {
     else if (data.timeRange) {
       _this.timeRange = data.timeRange;
     }
-    _this.getData();
-  });
-  
-  $('#ewsCustomPeriodSelection').click(function () {
-    _this.showCustomTimeRangeSelectionDialog();
+    
+    if (this.id === 'ewsCustomPeriodSelection') {
+      $('#ewsCustomTimeRangeSelectionDialog').dialog('open');
+    }
+    else {
+      _this.getData();
+    }
   });
 
   this.createChart('points');
@@ -1688,7 +2101,7 @@ function SCHistory() {
     show: true,
     dialogClass: 'ews-dialog',
     title: 'Cubes completed in cells SCed during last 30 days',
-    width: 800,
+    width: 880,
     open: function (event, ui) {
       $('.ui-widget-overlay').click(function() { // close by clicking outside the window
         $('#ewsSCHistory').dialog('close');
@@ -1766,14 +2179,28 @@ function SCHistory() {
   };
 
   this.updateDialogWindow = function () {
-    var
+    let
       cellId,
       html = '',
       el, threshold,
-      lsHistory = Utils.ls.get('sc-history');
+      lsHistory = Utils.ls.get('sc-history'),
+      status,
+      completed3Color = Cell.ScytheVisionColors.complete3;
 
     if (lsHistory && lsHistory !== '{}') {
       lsHistory = JSON.parse(lsHistory);
+
+      html += `
+      <hr>
+        <div>
+          <div id="scHistorySearchForCompleted" class="minimalButton selected sc-history-top-menu">Search for completed cells</div>
+          <div id="scHistoryRemoveCompleted" class="minimalButton selected sc-history-top-menu">Remove completed cells</div>
+          <div id="sc-history-top-menu-input-wrapper">Remove cells with SC# less than <input id="scHistoryRemoveBelowTresholdInput" type="number"><div id="scHistoryRemoveBelowTresholdButton" class="minimalButton selected sc-history-top-menu">Go</div></div>
+        </div>
+        <hr>
+        <br>
+      `;
+
       html += `
         <div class="ewsNavButtonGroup" id="ews-sc-history-period-selection">
           <div class="ewsNavButton" data-time-range="day">last 24h</div>
@@ -1795,9 +2222,12 @@ function SCHistory() {
           <th>Timestamp</th>
           <th>sc-info</th>
           <th>Cubes you can SC</th>
+          <th>Status</th>
           <th>&nbsp;</th>
         </tr></thead>`;
+
       html += '<tbody>';
+
       for (cellId in lsHistory) {
         if (lsHistory.hasOwnProperty(cellId)) {
           el = lsHistory[cellId];
@@ -1810,11 +2240,15 @@ function SCHistory() {
           else {
             threshold = '';
           }
+          
+          status = el.status || '--';
 
           html += `<tr
+          data-count="` + el.count + `"
           data-cell-id="` + cellId + `"
           data-timestamp="` + el.ts + `"
           data-dataset-id="` + el.datasetId + `"
+          data-status="` + status + `"
           >
             <td` + threshold + `>` + el.count + `</td>
             <td class="sc-history-cell-name">` + el.name + `</td>
@@ -1822,6 +2256,7 @@ function SCHistory() {
             <td>` + (new Date(el.ts)).toLocaleString() + `</td>
             <td><button class="sc-history-check-button minimalButton">Check</button></td>
             <td class="sc-history-results"></td>
+            <td>` + (status === 'Completed' ? '<span style="color: ' + completed3Color + ';">Completed</span>' : status) + `</td>
             <td><button class="sc-history-remove-button minimalButton">Remove</button></td>
           </tr>`;
         }
@@ -1833,6 +2268,10 @@ function SCHistory() {
     }
 
     Utils.gid('ewsSCHistoryWrapper').innerHTML = html;
+    
+    $('#scHistoryRemoveBelowTresholdInput').on('keypress keydown keyup', function (evt) {
+      evt.stopPropagation();
+    });
   };
 
   
@@ -1858,6 +2297,42 @@ function SCHistory() {
           row.style.display = 'none';
         }
       }
+  };
+  
+  $('body').append(`
+    <div id="sc-history-popup" tabindex="-1">
+      <span id="sc-history-remove-older">Remove all cells older than this one</span><br>
+      <span id="sc-history-remove-fewer">Remove all cells with SC # lower than this one</span>
+    </div>
+  `);
+  
+  
+  let removeHelper = function (lParam, rParam) {
+    let type = $('#ews-sc-history-dataset-selection .selected').data('type');
+    let baseCellData = Utils.gid('ewsSCHistoryWrapper').dataset;
+    let data = Utils.ls.get('sc-history');
+    if (!data || data === '{}') {
+      return;
+    }
+
+    data = JSON.parse(data);
+    for (let cellId in data) {
+      if (data.hasOwnProperty(cellId)) {
+        if (data[cellId][lParam] < baseCellData[rParam] && (data[cellId].datasetId == type || type === 'both')) {
+          delete data[cellId];
+        }
+      }
+    }
+
+    Utils.ls.set('sc-history', JSON.stringify(data));
+    _this.updateDialogWindow();
+    // to switch back to the tab selected before updating the dialog window
+    $('#ews-sc-history-dataset-selection').find('.ewsNavButton').each(function () {
+      if (this.dataset.type == type) {
+        this.click();
+        return false;
+      }
+    });
   };
 
   $(document)
@@ -1910,7 +2385,36 @@ function SCHistory() {
 
         }
       });
-    });
+    })
+    .on('contextmenu', '.sc-history-remove-button', function (evt) {
+      $('#sc-history-popup').css({
+        left: evt.clientX,
+        top: evt.clientY,
+        display: 'block'
+      });
+
+      // copy data- attrs from the selected row to the top-most container to know
+      // what rules use to remove entries
+      // source: https://stackoverflow.com/a/20074111
+      Object.assign(
+        Utils.gid('ewsSCHistoryWrapper').dataset,
+        this.parentNode.parentNode.dataset
+      );
+
+      evt.preventDefault();
+    })
+    .on('click', function (evt) {
+      if (evt.target.id !== 'sc-history-popup') {
+        Utils.gid('sc-history-popup').style.display = 'none';
+      }
+    })
+    .on('keydown', function (evt) {
+      if (evt.keyCode === 27) {
+        Utils.gid('sc-history-popup').style.display = 'none';
+      }
+    })
+    .on('click', '#sc-history-remove-older', removeHelper.bind(null, 'ts', 'timestamp'))
+    .on('click', '#sc-history-remove-fewer', removeHelper.bind(null, 'count', 'count'));
 
 
   $('#ewsSCHistoryWrapper')
@@ -2030,6 +2534,103 @@ function SCHistory() {
       type = $('#ews-sc-history-dataset-selection .selected').data('type');
 
       _this.filter(period, type);
+    })
+    .on('click', '#scHistorySearchForCompleted', function () {
+      let type = $('#ews-sc-history-dataset-selection .selected').data('type');
+      let cells = Utils.ls.get('sc-history');
+      let cell;
+      
+      if (! cells || cells === '{}') {
+        return;
+      }
+      
+      cells = JSON.parse(cells);
+      for (let cellId in cells) {
+        if (cells.hasOwnProperty(cellId)) {
+          cell = cells[cellId];
+          if ((!cell.status || cell.status !== 'Completed') && (cell.datasetId == type || type === 'both')) {
+            $.getJSON('https://eyewire.org/1.0/cell/' + cellId, function (data) {
+              if (data && data.completed !== null) {
+                cell.status = 'Completed';
+                // read and write to localStorage in each iteration, because otherwise
+                // only the last would be saved
+                let tempList = JSON.parse(Utils.ls.get('sc-history'));
+                tempList[cellId].status = 'Completed';
+                Utils.ls.set('sc-history', JSON.stringify(tempList));
+                _this.updateDialogWindow();
+                $('#ews-sc-history-dataset-selection').find('.ewsNavButton').each(function () {
+                  if (this.dataset.type == type) {
+                    this.click();
+                    return false;
+                  }
+                });
+              }
+            });
+          }
+        }
+      }
+    })
+    .on('click', '#scHistoryRemoveCompleted', function () {
+      let type = $('#ews-sc-history-dataset-selection .selected').data('type');
+      let cells = Utils.ls.get('sc-history');
+      let cell;
+      
+      if (!cells || cells === '{}') {
+        return;
+      }
+      
+      cells = JSON.parse(cells);
+      
+      for (let cellId in cells) {
+        if (cells.hasOwnProperty(cellId)) {
+          cell = cells[cellId];
+          if ((cell.status && cell.status === 'Completed') && (cell.datasetId == type || type === 'both')) {
+            delete cells[cellId];
+          }
+        }
+      }
+      
+      Utils.ls.set('sc-history', JSON.stringify(cells));
+      _this.updateDialogWindow();
+      $('#ews-sc-history-dataset-selection').find('.ewsNavButton').each(function () {
+        if (this.dataset.type == type) {
+          this.click();
+          return false;
+        }
+      });
+    })
+    .on('click', '#scHistoryRemoveBelowTresholdButton', function () {
+      let type = $('#ews-sc-history-dataset-selection .selected').data('type');
+      let val = Utils.gid('scHistoryRemoveBelowTresholdInput').value;
+      let cell;
+      
+      if (val && val > 0) {
+        let cells = Utils.ls.get('sc-history');
+        
+        if (!cells || cells === '{}') {
+          return;
+        }
+        
+        cells = JSON.parse(cells);
+        
+        for (let cellId in cells) {
+          if (cells.hasOwnProperty(cellId)) {
+            cell = cells[cellId];
+            if ((cell.count < val) && (cell.datasetId == type || type === 'both')) {
+              delete cells[cellId];
+            }
+          }
+        }
+        
+        Utils.ls.set('sc-history', JSON.stringify(cells));
+        _this.updateDialogWindow();
+        $('#ews-sc-history-dataset-selection').find('.ewsNavButton').each(function () {
+          if (this.dataset.type == type) {
+            this.click();
+            return false;
+          }
+        });
+      }
     });
 }
 // end: SC HISTORY
@@ -2745,7 +3346,7 @@ function Tracker() {
         <div class="ewsProfileHistoryButton" data-time-range="weeks">last 10 weeks</div>
         <div class="ewsProfileHistoryButton" data-time-range="months">last 12 months</div>
       </div>
-      <canvas id="ewsProfileHistoryChart" width=800 height=280></canvas>
+      <canvas id="ewsProfileHistoryChart" width=800 height=200></canvas>
     </div>
   `);
 
@@ -2811,8 +3412,12 @@ function Tracker() {
     fillingHelper(res, el, 'points', type, period);
     fillingHelper(res, el, 'cubes', type, period);
     fillingHelper(res, el, 'trailblazes', type, period);
-    fillingHelper(res, el, 'scythes', type, period);
-    fillingHelper(res, el, 'complete', type, period);
+    if (account.roles.scout) {
+      fillingHelper(res, el, 'scythes', type, period);
+      if (account.roles.scythe) {
+        fillingHelper(res, el, 'complete', type, period);
+      }
+    }
   }
   
   this.fillTable = function (type, columnHeaders, lastRowVisible, color) {
@@ -2867,7 +3472,7 @@ function Tracker() {
         oldData = {};
       }
 
-      oldData[Utils.calculateHqDate()] = {
+      oldData[Utils.date.calculateHqDate()] = {
         day: {
           trailblazed: data.day.trailblazes,
           scythed: data.day.scythes,
@@ -2904,6 +3509,13 @@ function Tracker() {
   };
 
   this.getChartSettings = function (labels) {
+    let lbl = 'cubes, tbs';
+    if (account.roles.scout) {
+      lbl += ', scythes';
+      if (account.roles.scythe) {
+        lbl += ', scs';
+      }
+    }
     return {
       'type': 'line',
       "data":{
@@ -2931,7 +3543,7 @@ function Tracker() {
               position: 'left',
               scaleLabel: {
                 display: true,
-                labelString: 'cubes, tbs, scythes, scs',
+                labelString: lbl,
                 fontSize: 14,
                 fontColor: '#bfbfbf'
               }
@@ -2986,9 +3598,9 @@ function Tracker() {
     let res = this.result.charts[period];
 
     switch (period) {
-      case 'days': keys = Utils.getLast.sevenDays(true); break;
-      case 'weeks': keys = Utils.getLast.tenWeeks(true); break;
-      case 'months': keys = Utils.getLast.twelveMonths(true); break;
+      case 'days': keys = Utils.date.getLast.sevenDays(true); break;
+      case 'weeks': keys = Utils.date.getLast.tenWeeks(true); break;
+      case 'months': keys = Utils.date.getLast.twelveMonths(true); break;
     }
     if (res) {
       for (let i = 0, len = keys.length; i < len; i++) {
@@ -3046,23 +3658,27 @@ function Tracker() {
       borderColor: '#FFA500',
     });
 
-    color = ColorUtils.hexToRGB(Cell.ScytheVisionColors.scythed);
-    this.addDataSeries({
-      settings: settings,
-      label: 'scythes',
-      data: this.getDataAsArray(period, 'scythes'),
-      backgroundColor: 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 0.2)',
-      borderColor: Cell.ScytheVisionColors.scythed,
-    });
+    if (account.roles.scout) {
+      color = ColorUtils.hexToRGB(Cell.ScytheVisionColors.scythed);
+      this.addDataSeries({
+        settings: settings,
+        label: 'scythes',
+        data: this.getDataAsArray(period, 'scythes'),
+        backgroundColor: 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 0.2)',
+        borderColor: Cell.ScytheVisionColors.scythed,
+      });
 
-    color = ColorUtils.hexToRGB(Cell.ScytheVisionColors.complete2);
-    this.addDataSeries({
-      settings: settings,
-      label: 'completes',
-      data: this.getDataAsArray(period, 'completes'),
-      backgroundColor: 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 0.2)',
-      borderColor: Cell.ScytheVisionColors.complete2,
-    });
+      if (account.roles.scythe) {
+        color = ColorUtils.hexToRGB(Cell.ScytheVisionColors.complete2);
+        this.addDataSeries({
+          settings: settings,
+          label: 'completes',
+          data: this.getDataAsArray(period, 'completes'),
+          backgroundColor: 'rgba(' + color.r + ', ' + color.g + ', ' + color.b + ', 0.2)',
+          borderColor: Cell.ScytheVisionColors.complete2,
+        });
+      }
+    }
     
     if (update) {
       this.chart.data.labels = settings.data.labels;
@@ -3080,15 +3696,15 @@ function Tracker() {
     let labels = [];
     switch (timeRange) {
       case 'days':
-        labels = Utils.getLast.sevenDays();
+        labels = Utils.date.getLast.sevenDays();
         break;
 
       case 'weeks':
-        labels = Utils.getLast.tenWeeks();
+        labels = Utils.date.getLast.tenWeeks();
         break;
 
       case 'months':
-        labels = Utils.getLast.twelveMonths();
+        labels = Utils.date.getLast.twelveMonths();
         break;
     }
     this.addCharts(timeRange, labels, true);
@@ -3153,7 +3769,7 @@ function Tracker() {
       let best = Utils.ls.get('profile-history-best');
       _this.result.best = best ? JSON.parse(best) : empty;
       
-      _this.addCharts('days', Utils.getLast.sevenDays());
+      _this.addCharts('days', Utils.date.getLast.sevenDays());
 
     }, 50);
   };
@@ -3179,7 +3795,7 @@ function Tracker() {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
       onload: function (response) {
-        if (DEBUG && 0) {
+        if (DEBUG && TEST_SERVER_UPDATE) {
           console.log(response.responseText);
           return;
         }
@@ -3212,7 +3828,7 @@ function Tracker() {
       url: 'http://ewstats.feedia.co/update_local_counters' + (DEBUG ? '_dev' : '') + '.php?' + data,
       onload: function (response) {
         if (response && response.responseText) {
-          if (DEBUG && 1) {
+          if (DEBUG && TEST_CLIENT_UPDATE) {
             console.log(response.responseText);
             return;
           }
@@ -3262,14 +3878,14 @@ function Tracker() {
   (function update() {
     let propName = 'profile-history-last-update-date';
     let lastUpdateDate = Utils.ls.get(propName);
-    if (!lastUpdateDate || lastUpdateDate != Utils.calculateHqDate() || DEBUG) {
+    if (!lastUpdateDate || lastUpdateDate != Utils.date.calculateHqDate() || DEBUG) {
       _this.updateServer(function () {
         _this.updateClient(function () {
           if (DEBUG) {
             Utils.ls.set(propName, 1);
           }
           else {
-            Utils.ls.set(propName, Utils.calculateHqDate());
+            Utils.ls.set(propName, Utils.date.calculateHqDate());
           }
         });
       });
@@ -3372,7 +3988,7 @@ function Tracker() {
 
 
 
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=6');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=7');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
@@ -3422,9 +4038,9 @@ var
 
 
 var settings = new EwsSettings();  
-var panel = new StatsPanel();
+new StatsPanel(); // jshint ignore:line
 var chart = new AccuChart();
-var tracker = new Tracker();
+new Tracker(); // jshint ignore:line
 
 
 
@@ -3485,40 +4101,45 @@ $('body').keydown(function (evt) {
 
     
 if (DEBUG) {
+
   $('body').append(`
     <button id="test-button" style="position: absolute; left: 100px; top: 10px; z-index: 101;">Test</button>
   `);
   
   
-function testFunction() {
-GM_xmlhttpRequest({
-      method: 'POST',
-      url: 'http://ewstats.feedia.co/update_server_counters' + (DEBUG ? '_dev' : '') + '.php',
-      data: 'data=' + encodeURIComponent(Utils.ls.get('profile-history')) +
-            '&uid=' + encodeURIComponent(account.account.uid),
-      headers:    {
-        'Content-Type': 'application/x-www-form-urlencoded'
-      },
-      onload: function (response) {console.log(response.responseText);return;
-        if (response.responseText === 'ok') {
-          if (callback) {
-            callback();
-          }
+  let testFunction = function () {
+  GM_xmlhttpRequest({
+        method: 'POST',
+        url: 'http://ewstats.feedia.co/update_server_counters' + (DEBUG ? '_dev' : '') + '.php',
+        data: 'data=' + encodeURIComponent(Utils.ls.get('profile-history')) +
+              '&uid=' + encodeURIComponent(account.account.uid),
+        headers:    {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        onload: function (response) {console.log(response.responseText);return;
+          /*if (response.responseText === 'ok') {
+            if (callback) {
+              callback();
+            }
+          }*/
+        },
+        onerror: function (response) {
+          console.error('error: ', response);
+        },
+        ontimeout: function (response) {
+          console.error('timeout: ', response);
         }
-      },
-      onerror: function (response) {
-        console.error('error: ', response);
-      },
-      ontimeout: function (response) {
-        console.error('timeout: ', response);
-      }
-    });
-}
+      });
+  };
 
   $('#test-button').click(function () {
     testFunction();
   });
-}
+
+} // end: DEBUG
+
+
 } // end: main()
+
 
 })(); // end: wrapper
