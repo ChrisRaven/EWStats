@@ -602,6 +602,15 @@
     display: inline-block;
 }
 
+#sc-history-top-menu-input-wrapper {
+    display: inline-block;
+    float: right;
+}
+
+#sc-history-top-menu-input-wrapper input {
+    width: 50px;
+}
+
 
 .custom-highlight button {
     color: #e4e1e1;
