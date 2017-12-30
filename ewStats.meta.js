@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.1.0
+// @version      2.1.1
 // @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
@@ -12,10 +12,4 @@
 // @require      https://chrisraven.github.io/EWStats/jquery-jvectormap-world-mill.js
 // @require      https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js
 // @resource     countries https://chrisraven.github.io/EWStats/countries.json
-// @resource     cubesPerDay https://chrisraven.github.io/EWStats/cubes_per_day.json
-// @resource     cubesPerWeek https://chrisraven.github.io/EWStats/cubes_per_week.json
-// @resource     cubesPerMonth https://chrisraven.github.io/EWStats/cubes_per_month.json
-// @resource     pointsPerDay https://chrisraven.github.io/EWStats/points_per_day.json
-// @resource     pointsPerWeek https://chrisraven.github.io/EWStats/points_per_week.json
-// @resource     pointsPerMonth https://chrisraven.github.io/EWStats/points_per_month.json
 // ==/UserScript==
