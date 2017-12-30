@@ -697,7 +697,7 @@ hr {
 }
 
 .own-profile {
-    height: 680px !important;
+    height: 660px !important;
 }
 
 .own-profile #performanceBadges {
@@ -706,7 +706,7 @@ hr {
 }
 
 .own-profile #profProfile {
-    height: 620px;
+    height: 590px;
 }
 
 .own-profile #lastChartsWrapper {
