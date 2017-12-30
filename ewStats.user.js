@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.1.0
+// @version      2.1.1
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -417,7 +417,7 @@ function StatsPanel() {
       li, a, list;
 
     li = document.createElement('li');
-    li.style.cursor = 'pointer';
+    li.id = 'ewsLinkWrapper';
     a = document.createElement('a');
     a.id = 'ewsLink';
     a.innerHTML = 'Stats';
@@ -1251,7 +1251,7 @@ function StatsPanel() {
         method: 'GET',
         url: url,
         onload: function (response) {
-          if (response && response.responseText) {
+          if (response && response.responseText) {//console.log(response.responseText);
             if (response.responseText !== '[]') {
               let data = JSON.parse(response.responseText);
               dataCurrentlyInUse = data;
@@ -2424,91 +2424,39 @@ function SCHistory() {
     .on('click', '.sc-history-check-button', function () {
       var
         _this = this,
-        semaphore = 3,
-        tasks, scytheData, completeData, myTasks,
         cellId = this.parentNode.parentNode.dataset.cellId;
 
-        function cleanTasks(potentialTasks, taskArray) {
-          var
-            i, len,
-            index;
+      $.when(
+        $.getJSON("/1.0/cell/" + cellId + "/tasks"),
+        $.getJSON("/1.0/cell/" + cellId + "/heatmap/scythe"),
+        $.getJSON("/1.0/cell/" + cellId + "/tasks/complete/player")
+      )
+      .done(function (tasks, scythe, completed) {
+        let potential, complete, uid, completedByMe;
 
-          for(i = 0, len = taskArray.length; i < len; i++) {
-            index = potentialTasks.indexOf(taskArray[i]);
+        tasks = tasks[0];
+        complete = scythe[0].complete || [];
+        completed = completed[0];
 
-            if(index >= 0) {
-              potentialTasks.splice(index, 1);
-            }
-          }
+        /* status =
+          active: 0
+          frozen: 10
+          duplicate: 11
+          stashed: 6 */
+        
+        potential = tasks.tasks.filter(x => (x.status === 0 || x.status === 11) && x.weight >= 3);
 
-          return potentialTasks;
-        }
+        potential = potential.map(x => x.id);
 
-      function runWhenDone() {
-        var
-          i, len, cur, index,
-          potentialTasks,
-          frozen, complete;
+        complete = complete.filter(x => x.votes >= 2);
+        complete = complete.map(x => x.id);
+        potential = potential.filter(x => complete.indexOf(x) === -1);
 
-        if (--semaphore) {
-          return;
-        }
+        uid = account.account.uid;
+        completedByMe = completed.scythe[uid].concat(completed.admin[uid]);
+        potential = potential.filter(x => completedByMe.indexOf(x) === -1);
 
-        potentialTasks = tasks.tasks.map(function(elem)  {return elem.id; });
-
-        frozen = scytheData.frozen || [];
-        complete = scytheData.complete || [];
-
-        for(i = 0, len = complete.length; i < len; i++) {
-            cur = complete[i];
-            if(cur.votes < 2) {
-              continue;
-            }
-
-            index = potentialTasks.indexOf(complete[i].id);
-
-            if(index >= 0) {
-                potentialTasks.splice(index, 1);
-            }
-        }
-
-        cleanTasks(potentialTasks, frozen);
-
-        completeData = JSON.parse(completeData);
-        myTasks = completeData.scythe[account.account.uid.toString()] || [];
-
-        cleanTasks(potentialTasks, myTasks);
-
-        $.get("/1.0/cell/" + cellId + "/heatmap/low-weight?weight=3").done(function(data) {
-            if(data["0"]) {
-              cleanTasks(potentialTasks, data["0"].map(function(elem) { return elem.task_id; }));
-            }
-            if(data["1"]) {
-              cleanTasks(potentialTasks, data["1"].map(function(elem) { return elem.task_id; }));
-            }
-            if(data["2"]) {
-              cleanTasks(potentialTasks, data["2"].map(function(elem) { return elem.task_id; }));
-            }
-
-            _this.parentNode.nextElementSibling.innerHTML = potentialTasks.length;
-
-        });
-      }
-
-      // source: crazyman's script
-      $.get("/1.0/cell/" + cellId + "/tasks").done(function(_tasks) {
-        tasks = _tasks;
-        runWhenDone();
-      });
-
-      $.get("/1.0/cell/" + cellId + "/heatmap/scythe").done(function(_scytheData) {
-        scytheData = _scytheData;
-        runWhenDone();
-      });
-
-      $.get("/1.0/cell/" + cellId + "/tasks/complete/player").done(function(_completeData) {
-        completeData = _completeData;
-        runWhenDone();
+        _this.parentNode.nextElementSibling.innerHTML = potential.length;
       });
     })
     .on('click', '.sc-history-remove-button', function () {
@@ -3987,8 +3935,7 @@ function Tracker() {
 
 
 
-
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=7');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=8');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
@@ -4139,7 +4086,9 @@ if (DEBUG) {
 } // end: DEBUG
 
 
+
 } // end: main()
+
 
 
 })(); // end: wrapper
