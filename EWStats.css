@@ -734,3 +734,13 @@ hr {
 .own-profile #lastChartsWrapper {
     display: block;
 }
+
+#profStatsAbout {
+    display: none;
+}
+
+#ewsWorldMap {
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%);
+}
