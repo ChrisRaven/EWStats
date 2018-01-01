@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.1.2
+// @version      2.1.3
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -100,8 +100,8 @@ const TEST_CLIENT_UPDATE = false;
     },
     
     date: {
-
-    // returns date in format of YYYY-MM-DD
+      dayLengthInMs: 1000 * 60 * 60 * 24,
+      // returns date in format of YYYY-MM-DD
       ISO8601DateStr: function (date) {
         return new Intl.DateTimeFormat('en-CA', {
             year: 'numeric',
@@ -165,7 +165,7 @@ const TEST_CLIENT_UPDATE = false;
 
           if (asDates) {
             cursor = new Date();
-            cursor.setDate(currentHqDate.getDate() - weekLength);
+            cursor.setTime(currentHqDate.getTime() - weekLength * Utils.date.dayLengthInMs);
 
             while (weekLength--) {
               result.push(new Intl.DateTimeFormat('en-CA', {
@@ -189,7 +189,7 @@ const TEST_CLIENT_UPDATE = false;
               result.push(weekdays[cursor]);
             }
           }
-          
+          console.log(result)
           return result;
         },
 
