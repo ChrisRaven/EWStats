@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.1.3
+// @version      2.1.4
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -189,7 +189,7 @@ const TEST_CLIENT_UPDATE = false;
               result.push(weekdays[cursor]);
             }
           }
-          console.log(result)
+
           return result;
         },
 
@@ -249,38 +249,39 @@ const TEST_CLIENT_UPDATE = false;
           let currentMonth = currentHqDate.getMonth();
           let year = currentHqDate.getFullYear();
           let yearLength = 12;
-          // we want to start from last month's date
-          let cursor = currentMonth === 0 ? 11 : currentMonth - 1;
+          let cursor = currentMonth;
           
           // no matter what, if we substract 12 months from the current date, we'll be in the previous year
           --year;
 
           if (asDates) {
-              while (yearLength--) {
-              if (cursor >= 11) {
-                cursor -= 11;
+            result.push(year + '-' + (cursor < 9 ? '0' : '') + (cursor + 1));
+            --yearLength;
+            while (yearLength--) {
+              if (cursor > 11) {
+                cursor = 0;
                 ++year;
               }
               else {
                 ++cursor;
               }
-
               result.push(year + '-' + (cursor < 9 ? '0' : '') + (cursor + 1));
             }
           }
           else {
+            result.push(months[cursor]);
+            --yearLength;
             while (yearLength--) {
-              if (cursor >= 11) {
-                cursor -= 11;
+              if (cursor > 11) {
+                cursor = 0;
               }
               else {
                 ++cursor;
               }
-
               result.push(months[cursor]);
             }
           }
-          
+
           return result;
         }
       },
@@ -613,6 +614,9 @@ function StatsPanel() {
 
   function optionsMonths(select) {
     let str = '';
+    if (select === 0) {
+      select = 12;
+    }
     for (let i = 1, len = Utils.date.monthsFullNames.length + 1; i < len; i++) {
       str += '<option value="' + (i < 10 ? '0' : '') + i + '"' + (i === select ? ' selected' : '') + '>' + Utils.date.monthsFullNames[i - 1];
     }
@@ -679,10 +683,10 @@ function StatsPanel() {
   s.day.year.innerHTML = optionsYears(year);
   s.day.month.innerHTML = optionsMonths(month);
   s.day.day.innerHTML = optionsDays(year, month, day);
-  
+
   s.week.year.innerHTML = optionsYears(date.getFullYear());
   s.week.week.innerHTML = optionsWeeks(date.getFullYear(), date.getMonth() + 1, date.getDate());
-  
+
   s.month.year.innerHTML = optionsYears(year);
   s.month.month.innerHTML = optionsMonths(currentMonth - 1);
   
@@ -761,7 +765,7 @@ function StatsPanel() {
   this.generateTableRow = function (position, flag, name, value, highlight) {
     return '<tr class="ewsRankingRow' + (highlight ? 'Highlight' : 'Normal') + '">' + // highlighting currently not used
         '<td>' + position + '</td>' +
-        '<td>' + (flag == 'rd' ? '&nbsp;' : '<img src="https://eyewire.org/static/images/flags/' + flag + '.png">') + '</td>' +
+        '<td>' + (flag === 'rd' || flag === ' ' ? '&nbsp;' : '<img src="https://eyewire.org/static/images/flags/' + flag + '.png">') + '</td>' +
         '<td><div class="ewsCountryNameWrapper">' + name + '</div></td>' +
         '<td>' + value + '</td>' +
       '</tr>';
@@ -3935,7 +3939,7 @@ function Tracker() {
 
 
 
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=8');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=9');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
