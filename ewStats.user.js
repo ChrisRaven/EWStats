@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.1.1
+// @version      2.1.2
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -2049,7 +2049,7 @@ Cell.ScytheVisionColors = {
 
       lbl.innerHTML = html;
     })
-    .on('mouseleave', function () {
+    .on('mouseleave', '#accuracy-weight-stripe', function () {
       Utils.gid('accu-floating-label').style.display = 'none';
     });
 
@@ -2448,7 +2448,7 @@ function SCHistory() {
 
         potential = potential.map(x => x.id);
 
-        complete = complete.filter(x => x.votes >= 2);
+        complete = complete.filter(x => x.votes >= 2 && !account.account.admin);
         complete = complete.map(x => x.id);
         potential = potential.filter(x => complete.indexOf(x) === -1);
 
