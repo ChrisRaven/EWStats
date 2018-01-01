@@ -33,8 +33,10 @@
   text-align: center;
   margin-left: auto;
   width: 120px;
-  position: relative;
+  position: absolute;
   margin-right: 95px;
+  top: 525px;
+  left: 668px;
 }
 
 #ewsChartCenterLabel span {
@@ -188,7 +190,7 @@
 #ewsChartLegend {
     position: relative;
     left: -30px;
-    top: -305px;
+    top: -235px;
     width: 220px;
 }
 
