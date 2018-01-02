@@ -1,11 +1,15 @@
 <?php
-// collects the data from EyeWire (because the other hosting can't :/), sends the data to the other hosting and creates a backup in the local db
-$db = new mysqli('host', 'user', 'password', 'db');
+require '../credentials/pass.php';
+
+$pdo = new PDO(
+  "mysql:host={$localhost};dbname={$dbname}", $user, $pass,
+  [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
+);
 
 $toExport = [];
 
 function collectTheData($type, $period) {
-  global $db, $toExport;
+  global $pdo, $toExport;
 
   $insert = 'INSERT INTO ' . $period . 's (uid, country, ' . $type . ', date) VALUES ';
   $inserts = array();
@@ -20,23 +24,26 @@ function collectTheData($type, $period) {
 		if ($data === NULL || json_last_error() !== JSON_ERROR_NONE) { // we don't need a valid JSON with NULL as its value
 			return false;
 		}
-		
+
 		foreach ($data as $entry) {
-      if ($period === 'weeks') {
-        $entry['date'] = $date->format('Y') . '-' . $date->format('W'); // yyyy-ww
+      $date = new DateTime($entry->date);
+      if ($period === 'week') {
+        $entry->date = $date->format('Y') . '-' . $date->format('W'); // yyyy-ww
       }
-      elseif ($period === 'months') {
-        $entry['date'] = $date->format('Y') . '-' . $date->format('m'); // yyyy-mm
+      elseif ($period === 'month') {
+        $entry->date = $date->format('Y') . '-' . $date->format('m'); // yyyy-mm
       }
 			$inserts[] = "({$entry->id}, '{$entry->country}', {$entry->points}, '{$entry->date}')"; // $entry->points for both cases, because that's how it's in the JSON
 		}
 		$insert .= implode(',', $inserts) . " ON DUPLICATE KEY UPDATE {$type} = VALUES({$type})";
-		$db->query($insert);
-    if ($db->errno) {
-      echo $db->error;
+
+		$result = $pdo->exec($insert);
+    if ($result === false) {
+      var_dump($pdo->errorInfo());
+      return false;
     }
 	}
-	catch (Exception $e) {echo $e->getMessage();
+	catch (Exception $e) {
 		// nothing to do here, just try to collect the rest of the data
 	}
 }
