@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.1.4
+// @version      2.1.5
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -444,7 +444,6 @@ function StatsPanel() {
         <div class="ewsNavButton" data-time-range="month">month</div>
         <div class="ewsNavButton" id="ewsCustomPeriodSelection" data-time-range="custom">custom</div>
       </div>
-      <div id=ewsWorldMap style="width: 873px; height: 400px;"></div>
       <table id=ewsChartWrapper>
         <tr>
           <td id=ewsLeftCell>
@@ -513,6 +512,7 @@ function StatsPanel() {
         </tbody>
       </table>
     </div>
+    <div id=ewsWorldMap style="width: 873px;"></div>
     `
   );
   
@@ -1330,6 +1330,15 @@ function StatsPanel() {
     title: 'EyeWire Statistics <div class="blinky" id=ewsLoader>',
     width: 900,
     open: function (event, ui) {
+      let el = Utils.gid('ewsWorldMap');
+      if (el.parentNode.tagName === 'BODY') {
+        let sibling = Utils.gid('ewsTimeRangeSelection');
+        sibling.parentNode.insertBefore(el, sibling.nextSibling);
+        el.style.visibility = 'visible';
+        el.style.top = 'inherit';
+        el.style.left = '50%';
+        $('#ewsPanel').dialog('option', 'position', {my: "center", at: "center", of: window});
+      }
       $('.ui-widget-overlay').click(function() { // close by clicking outside the window
         $('#ewsPanel').dialog('close');
       });
@@ -3939,7 +3948,7 @@ function Tracker() {
 
 
 
-Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=9');
+Utils.addCSSFile('https://chrisraven.github.io/EWStats/EWStats.css?v=10');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/jquery-jvectormap-2.0.3.css');
 Utils.addCSSFile('https://chrisraven.github.io/EWStats/spectrum.css?v=3');
 
