@@ -2,7 +2,7 @@
 require '../credentials/pass.php';
 
 $pdo = new PDO(
-  "mysql:host={$localhost};dbname={$dbname}", $user, $pass,
+  "mysql:host={$host};dbname={$dbname}", $user, $pass,
   [PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]
 );
 
