@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.2
-// @description  Shows daily, weekly and monthly statistics for EyeWire. Displays accuracy for the last 60 played/scythed cubes
+// @version      2.3
+// @description  Shows daily, weekly and monthly statistics for EyeWire
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
 // @downloadURL  https://raw.githubusercontent.com/ChrisRaven/EWStats/master/ewStats.user.js
