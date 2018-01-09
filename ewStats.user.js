@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.4
+// @version      2.4.1
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -1817,7 +1817,47 @@ if (account.roles.scout) {
   }
 }
 
+$(document).on('votes-updated', function (event, data) {
+      var
+        _data = data,
+        host = window.location.hostname,
+        targetUrl = 'https://';
 
+      if (host.indexOf('beta') !== -1) {
+        targetUrl += 'beta.';
+      }
+      else if (host.indexOf('chris') !== -1) {
+        targetUrl += 'chris.';
+      }
+      targetUrl += 'eyewire.org/1.0/cell/' + data.cellId + '/tasks/complete/player';
+
+      $.getJSON(targetUrl, function (JSONData) {
+        var
+          uid = account.account.uid,
+          btn = $('.showmeme button');
+
+        if (!JSONData) {
+          return;
+        }
+
+        if (!btn.hasClass('on1')) {
+          if (btn.hasClass('on2')) {
+            btn.click().click().click();
+          }
+          else {
+            btn.click();
+
+            setTimeout(function () {
+              btn.click();
+              setTimeout(function () {
+                btn.click();
+              }, 500);
+            }, 500);
+          }
+
+        }
+      });
+    });
 
 // submit using Spacebar
 $('body').keydown(function (evt) {
