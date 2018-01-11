@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.5
+// @version      2.5.1
 // @description  Shows EW Statistics and adds some other functionality
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/*
@@ -17,7 +17,7 @@
 // ==/UserScript==
 
 /*jshint esversion: 6 */
-/*globals $, account, indexedDB, GM_xmlhttpRequest, Chart, tomni, Keycodes, Cell, ColorUtils */
+/*globals $, account, GM_xmlhttpRequest, Chart, tomni, Keycodes, Cell, ColorUtils */
 
 const DEBUG = false;
 const TEST_SERVER_UPDATE = false;
@@ -339,74 +339,13 @@ const TEST_CLIENT_UPDATE = false;
 
 
 
-  // indexedDB
-  const DB_NAME = 'ews';
-  const DB_VERSION = 1;
-  const DB_STORE_NAME = account.account.uid + '-ews-custom-highlight';
-  
-  function Database() {
-    var getStore = function (mode, method, args, callback_success) {
-      var
-        db;
-
-      db = indexedDB.open(DB_NAME, DB_VERSION);
-      db.onsuccess = function () {
-        var
-          store, req;
-
-        db = db.result;
-        store = db.transaction(DB_STORE_NAME, mode).objectStore(DB_STORE_NAME);
-        req = store[method](args);
-        req.onerror = function (evt){};
-        if (callback_success && typeof callback_success === 'function') {
-          req.onsuccess = function (evt) {
-            callback_success(evt.target.result);
-          };
-        }
-      };
-      
-      db.onupgradeneeded = function (evt) {
-        evt.target.result.createObjectStore(DB_STORE_NAME, {keyPath: 'cellId'});
-      };
-    };
-
-
-    this.clearStore = function (callback) {
-      getStore('readwrite', 'clear', null, callback);
-    };
-
-    this.add = function (data, callback) {
-      getStore('readwrite', 'add', data, callback);
-    };
-
-    this.put = function (data, callback) {
-      getStore('readwrite', 'put', data, callback);
-    };
-
-    this.get = function (key, callback) {
-      getStore('readonly', 'get', key, callback);
-    };
-
-    this.delete = function (key, callback) {
-      getStore('readwrite', 'delete', key, callback);
-    };
-    
-    this.openCursor = function (callback) {
-      getStore('readwrite', 'openCursor', null, callback);
-    };
-  }
-  // end: indexedDB
-  
-
 // SETTINGS
 var EwsSettings = function () {
   // var intv;
   var _this = this;
   var settings = {
     'ews-auto-refresh-showmeme': false,
-    'ews-custom-highlight': false,
-    'ews-submit-using-spacebar': false,
-    'ews-accu-bars': true
+    'ews-submit-using-spacebar': false
   };
   // var settingsName = account.account.uid + '-ews-settings';
 
@@ -437,43 +376,6 @@ var EwsSettings = function () {
         </div>
       </div>
     `);
-  }
-
-  function applyColor(color) {
-    var
-      clr = color.toHexString();
-
-    Utils.gid('ews-custom-highlight-color').style.backgroundColor = clr;
-    Utils.ls.set('custom-highlight-color', clr);
-    
-    if (highlight) {
-      highlight.refresh();
-    }
-  }
-
-  if (account.roles.scout) {
-    add('Custom Highlight', 'ews-custom-highlight');
-
-    $('#ews-settings-group').append(`
-      <div id="ews-custom-highlight-color-label" style="display: ` + (_this.get('ews-custom-highlight') ? 'block' : 'none') + `">
-        Highlight Color
-        <div id="ews-custom-highlight-color"></div>
-      </div>
-    `);
-    
-    Utils.gid('ews-custom-highlight-color').style.backgroundColor = Utils.ls.get('custom-highlight-color') || '#929292';
-
-    $('#ews-custom-highlight-color').spectrum({
-      showInput: true,
-      preferredFormat: 'hex',
-      color: Utils.ls.get('custom-highlight-color') || '#929292',
-      containerClassName: 'ews-color-picker',
-      replacerClassName: 'ews-color-picker',
-      move: applyColor,
-      change: applyColor
-    });
-    
-    $('.sp-cancel, .sp-choose').addClass('minimalButton');
   }
 
   if (account.roles.scythe || account.roles.mystic) {
