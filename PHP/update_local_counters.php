@@ -78,7 +78,7 @@ function getPreviousResults() {
   $res = [];
 
   $result = $pdo->query("CALL get_last({$uid})");
-  if (!result) {
+  if (!$result) {
     return false;
   }
 
@@ -116,10 +116,11 @@ function getBestResults() {
   global $pdo, $uid;
   
   $res = [];
-  
+
+  // $result = $pdo->query("CALL get_best({$uid})");
   $result = $pdo->query("CALL get_best({$uid})");
-  
-  if (!result) {
+
+  if (!$result) {
     return false;
   }
 
@@ -140,7 +141,7 @@ function getCharts() {
   $res = [];
   
   $result = $pdo->query("CALL get_charts({$uid})");
-  if (!result) {
+  if (!$result) {
     return false;
   }
   

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         EyeWire Statistics
 // @namespace    http://tampermonkey.net/
-// @version      2.5.1
+// @version      2.6
 // @description  Shows daily, weekly and monthly statistics for EyeWire
 // @author       Krzysztof Kruk
 // @match        https://*.eyewire.org/
